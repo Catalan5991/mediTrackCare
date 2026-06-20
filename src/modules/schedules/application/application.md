@@ -1,0 +1,1 @@
+Contiene los casos de uso, por ejemplo: iniciar sesión.
