@@ -1,1 +1,0 @@
-Aquí se colocan las implementaciones técnicas.
