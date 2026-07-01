@@ -3,11 +3,10 @@ import { CreateMedicationDto } from '../dtos/create-medication.dto';
 import { MedicationEntity } from '../../domain/entities/medication.entity';
 import { MedicationsRepository } from '../../domain/interfaces/medications-repository.interface';
 
+// Crea medicamentos activos a partir de datos validados por la capa HTTP.
 @Injectable()
 export class CreateMedicationUseCase {
-  constructor(
-    private readonly medicationsRepository: MedicationsRepository,
-  ) {}
+  constructor(private readonly medicationsRepository: MedicationsRepository) {}
 
   async execute(dto: CreateMedicationDto): Promise<MedicationEntity> {
     const medication = new MedicationEntity({
@@ -20,6 +19,7 @@ export class CreateMedicationUseCase {
       isActive: true,
     });
 
+    // La aplicacion crea la entidad y delega la persistencia al puerto del dominio.
     return this.medicationsRepository.create(medication);
   }
 }

@@ -1,6 +1,7 @@
 import {IsEnum,IsNotEmpty,IsOptional,IsString,MaxLength,MinLength} from 'class-validator';
-import { MedicationForm, MedicationRoute } from '../../../../../generated/prisma/client';
+import {MedicationForm,MedicationRoute} from '../../../../../generated/prisma/client';
 
+// Entrada validada para registrar medicamentos dentro del catalogo.
 export class CreateMedicationDto {
   @IsString()
   @IsNotEmpty()

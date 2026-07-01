@@ -6,7 +6,8 @@ import { FindAllMedicationsUseCase } from '../../application/use-cases/find-all-
 import { FindMedicationByIdUseCase } from '../../application/use-cases/find-medication-by-id.use-case';
 import { UpdateMedicationUseCase } from '../../application/use-cases/update-medication.use-case';
 import { DeleteMedicationUseCase } from '../../application/use-cases/delete-medication.use-case';
- 
+
+// Fachada de infraestructura que expone operaciones del catalogo a controladores.
 @Injectable()
 export class MedicationsService {
   constructor(

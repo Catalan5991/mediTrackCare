@@ -10,11 +10,13 @@ import { MedicationsController } from './infraestructure/controllers/medications
 import { PrismaMedicationsRepository } from './infraestructure/repositories/prisma-medications.repository';
 import { MedicationsService } from './infraestructure/services/medications.service';
 
+// Agrupa el catalogo de medicamentos y conecta casos de uso con Prisma.
 @Module({
   controllers: [MedicationsController],
   providers: [
     PrismaService,
 
+    // Token del dominio resuelto con el adaptador de persistencia concreto.
     {
       provide: MedicationsRepository,
       useClass: PrismaMedicationsRepository,
@@ -28,9 +30,6 @@ import { MedicationsService } from './infraestructure/services/medications.servi
     UpdateMedicationUseCase,
     DeleteMedicationUseCase,
   ],
-  exports: [
-    MedicationsService,
-    MedicationsRepository,
-  ],
+  exports: [MedicationsService, MedicationsRepository],
 })
 export class MedicationsModule {}

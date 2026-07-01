@@ -1,5 +1,9 @@
-import { MedicationForm, MedicationRoute } from '../../../../../generated/prisma/client';
- 
+import {
+  MedicationForm,
+  MedicationRoute,
+} from '../../../../../generated/prisma/client';
+
+// Propiedades que componen un medicamento dentro del dominio.
 export interface MedicationProps {
   id?: number;
   name: string;
@@ -13,6 +17,7 @@ export interface MedicationProps {
   updatedAt?: Date;
 }
 
+// Entidad de dominio que centraliza los datos del catalogo de medicamentos.
 export class MedicationEntity {
   public readonly id?: number;
   public name: string;

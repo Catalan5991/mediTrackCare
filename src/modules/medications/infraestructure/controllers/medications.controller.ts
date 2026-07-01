@@ -3,7 +3,8 @@ import { CreateMedicationDto } from '../../application/dtos/create-medication.dt
 import { UpdateMedicationDto } from '../../application/dtos/update-medication.dto';
 import { MedicationExceptionFilter } from '../filters/medication-exception.filter';
 import { MedicationsService } from '../services/medications.service';
- 
+
+// Expone endpoints CRUD del catalogo y delega reglas a la capa de aplicacion.
 @Controller('medications')
 @UseFilters(MedicationExceptionFilter)
 export class MedicationsController {

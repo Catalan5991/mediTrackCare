@@ -1,6 +1,7 @@
 import { Medication } from '../../../../../generated/prisma/client';
 import { MedicationEntity } from '../../domain/entities/medication.entity';
- 
+
+// Convierte registros de Prisma en entidades para aislar el dominio.
 export class MedicationMapper {
   static toDomain(medication: Medication): MedicationEntity {
     return new MedicationEntity({

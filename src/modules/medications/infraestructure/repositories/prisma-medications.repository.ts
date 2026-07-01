@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, MedicationForm, MedicationRoute } from '../../../../../generated/prisma/client';
+import { Prisma,MedicationForm,MedicationRoute} from '../../../../../generated/prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { MedicationEntity } from '../../domain/entities/medication.entity';
-import { FindAllMedicationsParams,MedicationsRepository } from '../../domain/interfaces/medications-repository.interface';
+import {
+  FindAllMedicationsParams,
+  MedicationsRepository,
+} from '../../domain/interfaces/medications-repository.interface';
 import { MedicationMapper } from '../mappers/medication.mapper';
- 
+
+// Adaptador Prisma que implementa el puerto de persistencia de medicamentos.
 @Injectable()
 export class PrismaMedicationsRepository implements MedicationsRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -17,6 +21,7 @@ export class PrismaMedicationsRepository implements MedicationsRepository {
     const orConditions: Prisma.MedicationWhereInput[] = [];
 
     if (search) {
+      // Busca texto libre en campos visibles del catalogo.
       orConditions.push(
         {
           name: {
@@ -46,6 +51,7 @@ export class PrismaMedicationsRepository implements MedicationsRepository {
 
       const normalizedSearch = search.toUpperCase();
 
+      // Tambien permite buscar por valores exactos de enums escritos como texto.
       if (
         Object.values(MedicationForm).includes(
           normalizedSearch as MedicationForm,
@@ -131,6 +137,7 @@ export class PrismaMedicationsRepository implements MedicationsRepository {
   }
 
   async delete(id: number): Promise<MedicationEntity> {
+    // Borrado logico: conserva el registro y lo oculta de vistas activas.
     const deletedMedication = await this.prisma.medication.update({
       where: { id },
       data: {
