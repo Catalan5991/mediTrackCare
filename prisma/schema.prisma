@@ -116,3 +116,26 @@ model Medication {
 
   @@map("medications")
 }
+
+model Prescription {
+  id        Int                @id @default(autoincrement())
+  patientId Int               @map("patient_id")
+  doctorId  Int?              @map("doctor_id")
+  diagnosis String?
+  notes     String?
+  startDate DateTime          @map("start_date") @db.Date
+  endDate   DateTime?         @map("end_date") @db.Date
+  status    PrescriptionStatus @default(ACTIVE)
+  createdAt DateTime          @default(now()) @map("created_at")
+  updatedAt DateTime          @updatedAt @map("updated_at")
+
+  patient Patient @relation(fields: [patientId], references: [id])
+  doctor  Doctor? @relation(fields: [doctorId], references: [id])
+
+  items PrescriptionItem[]
+  files File[]
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@map("prescriptions")
+}
