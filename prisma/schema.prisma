@@ -210,3 +210,24 @@ model Intake {
   @@index([confirmedByUserId])
   @@map("intakes")
 }
+
+model MedicalMeasurement {
+  id                 Int             @id @default(autoincrement())
+  patientId          Int             @map("patient_id")
+  registeredByUserId Int?            @map("registered_by_user_id")
+  measurementType    MeasurementType @map("measurement_type")
+  value              Decimal         @db.Decimal(10, 2)
+  secondValue        Decimal?        @map("second_value") @db.Decimal(10, 2)
+  unit               String
+  notes              String?
+  measuredAt         DateTime        @map("measured_at")
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+
+  patient      Patient @relation(fields: [patientId], references: [id])
+  registeredBy User?   @relation("MeasurementRegisteredBy", fields: [registeredByUserId], references: [id])
+
+  @@index([patientId])
+  @@index([registeredByUserId])
+  @@map("medical_measurements")
+}
