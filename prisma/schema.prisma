@@ -164,3 +164,22 @@ model PrescriptionItem {
   @@map("prescription_items")
 }
 
+model Reminder {
+  id                 Int      @id @default(autoincrement())
+  patientId          Int      @map("patient_id")
+  prescriptionItemId Int      @map("prescription_item_id")
+  scheduledTime      String   @map("scheduled_time")
+  daysOfWeek         String?  @map("days_of_week")
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  patient          Patient          @relation(fields: [patientId], references: [id])
+  prescriptionItem PrescriptionItem @relation(fields: [prescriptionItemId], references: [id])
+
+  intakes Intake[]
+
+  @@index([patientId])
+  @@index([prescriptionItemId])
+  @@map("reminders")
+}
