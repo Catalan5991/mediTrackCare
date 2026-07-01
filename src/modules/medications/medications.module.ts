@@ -6,9 +6,9 @@ import { FindAllMedicationsUseCase } from './application/use-cases/find-all-medi
 import { FindMedicationByIdUseCase } from './application/use-cases/find-medication-by-id.use-case';
 import { UpdateMedicationUseCase } from './application/use-cases/update-medication.use-case';
 import { MedicationsRepository } from './domain/interfaces/medications-repository.interface';
-import { MedicationsController } from './infraestructure/controllers/medications.controller';
-import { PrismaMedicationsRepository } from './infraestructure/repositories/prisma-medications.repository';
-import { MedicationsService } from './infraestructure/services/medications.service';
+import { MedicationsController } from './infrastructure/controllers/medications.controller';
+import { PrismaMedicationsRepository } from './infrastructure/repositories/prisma-medications.repository';
+import { MedicationsService } from './infrastructure/services/medications.service';
 
 // Agrupa el catalogo de medicamentos y conecta casos de uso con Prisma.
 @Module({
