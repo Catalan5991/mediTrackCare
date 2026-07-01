@@ -23,4 +23,16 @@ model User {
   isActive  Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  patientProfile Patient?
+  doctorProfile  Doctor?
+  caregiverProfiles Caregiver[]
+  confirmedIntakes       Intake[]             @relation("IntakeConfirmedBy")
+  registeredMeasurements MedicalMeasurement[] @relation("MeasurementRegisteredBy")
+  notifications          Notification[]
+  auditLogs              AuditLog[]
+
+  @@map("users")
 }
+
+
