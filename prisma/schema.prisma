@@ -254,3 +254,24 @@ model Notification {
   @@index([intakeId])
   @@map("notifications")
 }
+
+model File {
+  id             Int      @id @default(autoincrement())
+  patientId      Int?     @map("patient_id")
+  prescriptionId Int?     @map("prescription_id")
+  medicationId   Int?     @map("medication_id")
+  fileName       String   @map("file_name")
+  fileUrl        String   @map("file_url")
+  fileType       String   @map("file_type")
+  description    String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  patient      Patient?      @relation(fields: [patientId], references: [id])
+  prescription Prescription? @relation(fields: [prescriptionId], references: [id])
+  medication   Medication?   @relation(fields: [medicationId], references: [id])
+
+  @@index([patientId])
+  @@index([prescriptionId])
+  @@index([medicationId])
+  @@map("files")
+}
