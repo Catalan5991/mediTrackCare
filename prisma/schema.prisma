@@ -13,52 +13,6 @@ datasource db {
   provider = "postgresql"
 }
 
-// Enums
-enum Gender {
-  FEMENINO
-  MASCULINO
-  OTRO
-  NO_ESPECIFICADO
-}
-
-enum PrescriptionStatus {
-  ACTIVO
-  FINALIZADO
-  CANCELADO
-  PAUSADO
-}
-
-enum IntakeStatus {
-  PENDIENTE
-  TOMADA
-  OMITIDA
-  RETRASADA
-}
-
-enum MeasurementType {
-  PRESION_ARTERIAL
-  GLUCOSA
-  TEMPERATURA
-  SATURACION_OXIGENO
-  PESO
-  FRECUENCIA_CARDIACA
-}
-
-enum NotificationType {
-  RECORDATORIO_TOMA
-  TOMA_OMITIDA
-  TOMA_CONFIRMADA
-  ALERTA_MEDICA
-  GENERAL
-}
-
-enum NotificationStatus {
-  PENDIENTE
-  ENVIADA
-  LEIDA
-  FALLIDA
-}
-
 model Role {
   id          Int      @id @default(autoincrement())
   name        String   @unique
@@ -164,10 +118,10 @@ model Medication {
   id            Int      @id @default(autoincrement())
   name          String
   description   String?
-  presentation  String?
+  presentation  MedicationForm
   concentration String?
   unit          String?
-  route         String?
+  route         MedicationRoute
   isActive      Boolean  @default(true) @map("is_active")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
@@ -351,4 +305,78 @@ model AuditLog {
 
   @@index([userId])
   @@map("audit_logs")
+}
+
+// Enums
+enum Gender {
+  FEMENINO
+  MASCULINO
+  OTRO
+  NO_ESPECIFICADO
+}
+
+enum PrescriptionStatus {
+  ACTIVO
+  FINALIZADO
+  CANCELADO
+  PAUSADO
+}
+
+enum IntakeStatus {
+  PENDIENTE
+  TOMADA
+  OMITIDA
+  RETRASADA
+}
+
+enum MeasurementType {
+  PRESION_ARTERIAL
+  GLUCOSA
+  TEMPERATURA
+  SATURACION_OXIGENO
+  PESO
+  FRECUENCIA_CARDIACA
+}
+
+enum NotificationType {
+  RECORDATORIO_TOMA
+  TOMA_OMITIDA
+  TOMA_CONFIRMADA
+  ALERTA_MEDICA
+  GENERAL
+}
+
+enum NotificationStatus {
+  PENDIENTE
+  ENVIADA
+  LEIDA
+  FALLIDA
+}
+
+enum MedicationForm {
+  TABLETA
+  CAPSULA
+  JARABE
+  SUSPENSION
+  INYECCION
+  GOTAS
+  CREMA
+  UNGUENTO
+  INHALADOR
+  POLVO
+  OTRO
+}
+
+enum MedicationRoute {
+  ORAL
+  INTRAVENOSA
+  INTRAMUSCULAR
+  SUBCUTANEA
+  TOPICA
+  OFTALMICA
+  OTICA
+  NASAL
+  INHALADA
+  RECTAL
+  OTRO
 }
