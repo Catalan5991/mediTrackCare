@@ -80,3 +80,21 @@ model Doctor {
 
   @@map("doctors")
 }
+
+model Caregiver {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  patientId    Int      @map("patient_id")
+  relationship String
+  isPrimary    Boolean  @default(false) @map("is_primary")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id])
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@unique([userId, patientId])
+  @@index([patientId])
+  @@map("caregivers")
+}
