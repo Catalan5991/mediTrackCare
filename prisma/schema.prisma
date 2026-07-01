@@ -139,3 +139,28 @@ model Prescription {
   @@index([doctorId])
   @@map("prescriptions")
 }
+
+model PrescriptionItem {
+  id             Int      @id @default(autoincrement())
+  prescriptionId Int      @map("prescription_id")
+  medicationId   Int      @map("medication_id")
+  dose           String
+  frequency      String
+  instructions   String?
+  startDate      DateTime @map("start_date") @db.Date
+  endDate        DateTime? @map("end_date") @db.Date
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id])
+  medication   Medication   @relation(fields: [medicationId], references: [id])
+
+  reminders Reminder[]
+  intakes   Intake[]
+
+  @@index([prescriptionId])
+  @@index([medicationId])
+  @@map("prescription_items")
+}
+
