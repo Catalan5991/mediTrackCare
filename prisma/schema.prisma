@@ -61,3 +61,22 @@ model Patient {
 
   @@map("patients")
 }
+
+model Doctor {
+  id                  Int      @id @default(autoincrement())
+  userId              Int      @unique @map("user_id")
+  fullName            String   @map("full_name")
+  professionalLicense String?  @unique @map("professional_license")
+  specialty           String?
+  phone               String?
+  email               String?
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  prescriptions Prescription[]
+
+  @@map("doctors")
+}
