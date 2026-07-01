@@ -7,20 +7,376 @@ generator client {
   provider            = "prisma-client"
   output              = "../generated/prisma"
   importFileExtension = "js"
-
 }
 
 datasource db {
   provider = "postgresql"
 }
 
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  users User[]
+
+  @@map("roles")
+}
+
 model User {
-  id  Int @id @default(autoincrement())
-  name  String
-  email String @unique
+  id        Int      @id @default(autoincrement())
+  roleId    Int      @map("role_id")
+  name      String
+  email     String   @unique
   password  String
-  role  String @default("PATIENT")
-  isActive  Boolean @default(true)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  role Role @relation(fields: [roleId], references: [id])
+
+  patientProfile         Patient?
+  doctorProfile          Doctor?
+  caregiverProfiles      Caregiver[]
+  confirmedIntakes       Intake[]             @relation("IntakeConfirmedBy")
+  registeredMeasurements MedicalMeasurement[] @relation("MeasurementRegisteredBy")
+  notifications          Notification[]
+  auditLogs              AuditLog[]
+
+  @@index([roleId])
+  @@map("users")
+}
+
+model Patient {
+  id                    Int      @id @default(autoincrement())
+  userId                Int      @unique @map("user_id")
+  fullName              String   @map("full_name")
+  birthDate             DateTime @map("birth_date") @db.Date
+  gender                Gender   @default(NO_ESPECIFICADO)
+  phone                 String?
+  address               String?
+  emergencyContactName  String?  @map("emergency_contact_name")
+  emergencyContactPhone String?  @map("emergency_contact_phone")
+  isActive              Boolean  @default(true) @map("is_active")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  caregivers          Caregiver[]
+  prescriptions       Prescription[]
+  reminders           Reminder[]
+  intakes             Intake[]
+  medicalMeasurements MedicalMeasurement[]
+  notifications       Notification[]
+  files               File[]
+
+  @@map("patients")
+}
+
+model Doctor {
+  id                  Int      @id @default(autoincrement())
+  userId              Int      @unique @map("user_id")
+  fullName            String   @map("full_name")
+  professionalLicense String?  @unique @map("professional_license")
+  specialty           String?
+  phone               String?
+  email               String?
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  prescriptions Prescription[]
+
+  @@map("doctors")
+}
+
+model Caregiver {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  patientId    Int      @map("patient_id")
+  relationship String
+  isPrimary    Boolean  @default(false) @map("is_primary")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id])
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@unique([userId, patientId])
+  @@index([patientId])
+  @@map("caregivers")
+}
+
+model Medication {
+  id            Int      @id @default(autoincrement())
+  name          String
+  description   String?
+  presentation  MedicationForm
+  concentration String?
+  unit          String?
+  route         MedicationRoute
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  prescriptionItems PrescriptionItem[]
+  files             File[]
+
+  @@map("medications")
+}
+
+model Prescription {
+  id        Int                @id @default(autoincrement())
+  patientId Int                @map("patient_id")
+  doctorId  Int?               @map("doctor_id")
+  diagnosis String?
+  notes     String?
+  startDate DateTime           @map("start_date") @db.Date
+  endDate   DateTime?          @map("end_date") @db.Date
+  status    PrescriptionStatus @default(ACTIVO)
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+
+  patient Patient @relation(fields: [patientId], references: [id])
+  doctor  Doctor? @relation(fields: [doctorId], references: [id])
+
+  items PrescriptionItem[]
+  files File[]
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@map("prescriptions")
+}
+
+model PrescriptionItem {
+  id             Int       @id @default(autoincrement())
+  prescriptionId Int       @map("prescription_id")
+  medicationId   Int       @map("medication_id")
+  dose           String
+  frequency      String
+  instructions   String?
+  startDate      DateTime  @map("start_date") @db.Date
+  endDate        DateTime? @map("end_date") @db.Date
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id])
+  medication   Medication   @relation(fields: [medicationId], references: [id])
+
+  reminders Reminder[]
+  intakes   Intake[]
+
+  @@index([prescriptionId])
+  @@index([medicationId])
+  @@map("prescription_items")
+}
+
+model Reminder {
+  id                 Int      @id @default(autoincrement())
+  patientId          Int      @map("patient_id")
+  prescriptionItemId Int      @map("prescription_item_id")
+  scheduledTime      String   @map("scheduled_time")
+  daysOfWeek         String?  @map("days_of_week")
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  patient          Patient          @relation(fields: [patientId], references: [id])
+  prescriptionItem PrescriptionItem @relation(fields: [prescriptionItemId], references: [id])
+
+  intakes Intake[]
+
+  @@index([patientId])
+  @@index([prescriptionItemId])
+  @@map("reminders")
+}
+
+model Intake {
+  id                 Int          @id @default(autoincrement())
+  patientId          Int          @map("patient_id")
+  prescriptionItemId Int          @map("prescription_item_id")
+  reminderId         Int?         @map("reminder_id")
+  confirmedByUserId  Int?         @map("confirmed_by_user_id")
+  scheduledAt        DateTime     @map("scheduled_at")
+  takenAt            DateTime?    @map("taken_at")
+  status             IntakeStatus @default(PENDIENTE)
+  notes              String?
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+
+  patient          Patient          @relation(fields: [patientId], references: [id])
+  prescriptionItem PrescriptionItem @relation(fields: [prescriptionItemId], references: [id])
+  reminder         Reminder?        @relation(fields: [reminderId], references: [id])
+  confirmedBy      User?            @relation("IntakeConfirmedBy", fields: [confirmedByUserId], references: [id])
+
+  notifications Notification[]
+
+  @@index([patientId])
+  @@index([prescriptionItemId])
+  @@index([reminderId])
+  @@index([confirmedByUserId])
+  @@map("intakes")
+}
+
+model MedicalMeasurement {
+  id                 Int             @id @default(autoincrement())
+  patientId          Int             @map("patient_id")
+  registeredByUserId Int?            @map("registered_by_user_id")
+  measurementType    MeasurementType @map("measurement_type")
+  value              Decimal         @db.Decimal(10, 2)
+  secondValue        Decimal?        @map("second_value") @db.Decimal(10, 2)
+  unit               String
+  notes              String?
+  measuredAt         DateTime        @map("measured_at")
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+
+  patient      Patient @relation(fields: [patientId], references: [id])
+  registeredBy User?   @relation("MeasurementRegisteredBy", fields: [registeredByUserId], references: [id])
+
+  @@index([patientId])
+  @@index([registeredByUserId])
+  @@map("medical_measurements")
+}
+
+model Notification {
+  id        Int                @id @default(autoincrement())
+  userId    Int                @map("user_id")
+  patientId Int?               @map("patient_id")
+  intakeId  Int?               @map("intake_id")
+  title     String
+  message   String
+  type      NotificationType
+  status    NotificationStatus @default(PENDIENTE)
+  sentAt    DateTime?          @map("sent_at")
+  readAt    DateTime?          @map("read_at")
+  createdAt DateTime           @default(now()) @map("created_at")
+
+  user    User     @relation(fields: [userId], references: [id])
+  patient Patient? @relation(fields: [patientId], references: [id])
+  intake  Intake?  @relation(fields: [intakeId], references: [id])
+
+  @@index([userId])
+  @@index([patientId])
+  @@index([intakeId])
+  @@map("notifications")
+}
+
+model File {
+  id             Int      @id @default(autoincrement())
+  patientId      Int?     @map("patient_id")
+  prescriptionId Int?     @map("prescription_id")
+  medicationId   Int?     @map("medication_id")
+  fileName       String   @map("file_name")
+  fileUrl        String   @map("file_url")
+  fileType       String   @map("file_type")
+  description    String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  patient      Patient?      @relation(fields: [patientId], references: [id])
+  prescription Prescription? @relation(fields: [prescriptionId], references: [id])
+  medication   Medication?   @relation(fields: [medicationId], references: [id])
+
+  @@index([patientId])
+  @@index([prescriptionId])
+  @@index([medicationId])
+  @@map("files")
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int?     @map("user_id")
+  module      String
+  action      String
+  entityName  String   @map("entity_name")
+  entityId    Int?     @map("entity_id")
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("audit_logs")
+}
+
+// Enums
+enum Gender {
+  FEMENINO
+  MASCULINO
+  OTRO
+  NO_ESPECIFICADO
+}
+
+enum PrescriptionStatus {
+  ACTIVO
+  FINALIZADO
+  CANCELADO
+  PAUSADO
+}
+
+enum IntakeStatus {
+  PENDIENTE
+  TOMADA
+  OMITIDA
+  RETRASADA
+}
+
+enum MeasurementType {
+  PRESION_ARTERIAL
+  GLUCOSA
+  TEMPERATURA
+  SATURACION_OXIGENO
+  PESO
+  FRECUENCIA_CARDIACA
+}
+
+enum NotificationType {
+  RECORDATORIO_TOMA
+  TOMA_OMITIDA
+  TOMA_CONFIRMADA
+  ALERTA_MEDICA
+  GENERAL
+}
+
+enum NotificationStatus {
+  PENDIENTE
+  ENVIADA
+  LEIDA
+  FALLIDA
+}
+
+enum MedicationForm {
+  TABLETA
+  CAPSULA
+  JARABE
+  SUSPENSION
+  INYECCION
+  GOTAS
+  CREMA
+  UNGUENTO
+  INHALADOR
+  POLVO
+  OTRO
+}
+
+enum MedicationRoute {
+  ORAL
+  INTRAVENOSA
+  INTRAMUSCULAR
+  SUBCUTANEA
+  TOPICA
+  OFTALMICA
+  OTICA
+  NASAL
+  INHALADA
+  RECTAL
+  OTRO
 }
