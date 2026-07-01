@@ -183,3 +183,30 @@ model Reminder {
   @@index([prescriptionItemId])
   @@map("reminders")
 }
+
+model Intake {
+  id                 Int          @id @default(autoincrement())
+  patientId          Int          @map("patient_id")
+  prescriptionItemId Int          @map("prescription_item_id")
+  reminderId         Int?         @map("reminder_id")
+  confirmedByUserId  Int?         @map("confirmed_by_user_id")
+  scheduledAt        DateTime     @map("scheduled_at")
+  takenAt            DateTime?    @map("taken_at")
+  status             IntakeStatus @default(PENDING)
+  notes              String?
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+
+  patient          Patient          @relation(fields: [patientId], references: [id])
+  prescriptionItem PrescriptionItem @relation(fields: [prescriptionItemId], references: [id])
+  reminder         Reminder?        @relation(fields: [reminderId], references: [id])
+  confirmedBy      User?            @relation("IntakeConfirmedBy", fields: [confirmedByUserId], references: [id])
+
+  notifications Notification[]
+
+  @@index([patientId])
+  @@index([prescriptionItemId])
+  @@index([reminderId])
+  @@index([confirmedByUserId])
+  @@map("intakes")
+}
