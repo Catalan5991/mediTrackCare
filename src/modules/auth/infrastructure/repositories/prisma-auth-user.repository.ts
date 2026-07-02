@@ -7,18 +7,28 @@ import type {
 } from '../../domain/interfaces/auth-user-repository.interface';
 import { AuthUserMapper } from '../mappers/auth-user.mapper';
 
+const DEFAULT_ROLE_NAME = 'PATIENT';
+
 @Injectable()
 // Adaptador Prisma del puerto AuthUserRepository.
 export class PrismaAuthUserRepository implements AuthUserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(data: CreateAuthUserData): Promise<AuthUser> {
-    // El rol y estado activo usan los defaults definidos en schema.prisma.
     const user = await this.prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
         password: data.password,
+        role: {
+          connectOrCreate: {
+            where: { name: DEFAULT_ROLE_NAME },
+            create: { name: DEFAULT_ROLE_NAME },
+          },
+        },
+      },
+      include: {
+        role: true,
       },
     });
 
@@ -28,6 +38,9 @@ export class PrismaAuthUserRepository implements AuthUserRepository {
   async findById(id: number): Promise<AuthUser | null> {
     const user = await this.prisma.user.findUnique({
       where: { id },
+      include: {
+        role: true,
+      },
     });
 
     return user ? AuthUserMapper.toDomain(user) : null;
@@ -36,6 +49,9 @@ export class PrismaAuthUserRepository implements AuthUserRepository {
   async findByEmail(email: string): Promise<AuthUser | null> {
     const user = await this.prisma.user.findUnique({
       where: { email },
+      include: {
+        role: true,
+      },
     });
 
     return user ? AuthUserMapper.toDomain(user) : null;
