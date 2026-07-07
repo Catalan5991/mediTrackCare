@@ -14,6 +14,8 @@ import { PatientsModule } from './modules/patients/patients.module';
 import { PrescriptionsModule } from './modules/prescriptions/prescriptions.module';
 import { MedicalMeasurementsModule } from './modules/medical-measurements/medical-measurements.module';
 import { IntakesModule } from './modules/intakes/intakes.module';
+import { CaregiversModule } from './modules/caregivers/caregivers.module';
+import { RolesModule } from './modules/roles/roles.module';
 
 @Module({
   imports: [
@@ -22,9 +24,11 @@ import { IntakesModule } from './modules/intakes/intakes.module';
     }),
     PrismaModule,
     AuthModule,
+    RolesModule,
     UsersModule,
     MedicationsModule,
     PatientsModule,
+    CaregiversModule,
     PrescriptionsModule,
     MedicalMeasurementsModule,
     IntakesModule,
