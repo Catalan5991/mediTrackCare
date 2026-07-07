@@ -12,6 +12,7 @@ import { UsersModule } from './modules/users/users.module';
 import { MedicationsModule } from './modules/medications/medications.module';
 import { PatientsModule } from './modules/patients/patients.module';
 import { PrescriptionsModule } from './modules/prescriptions/prescriptions.module';
+import { MedicalMeasurementsModule } from './modules/medical-measurements/medical-measurements.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { PrescriptionsModule } from './modules/prescriptions/prescriptions.modul
     UsersModule,
     MedicationsModule,
     PatientsModule,
-    PrescriptionsModule
+    PrescriptionsModule,
+    MedicalMeasurementsModule
   ],
   controllers: [AppController],
   providers: [
