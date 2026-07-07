@@ -1,0 +1,18 @@
+import { Reminder } from '../../../../../generated/prisma/client';
+import { ReminderEntity } from '../../domain/entities/reminder.entity';
+
+// Traduce modelos generados por Prisma a entidades del dominio.
+export class ReminderMapper {
+  static fromPrisma(reminder: Reminder): ReminderEntity {
+    return new ReminderEntity({
+      id: reminder.id,
+      patientId: reminder.patientId,
+      prescriptionItemId: reminder.prescriptionItemId,
+      scheduledTime: reminder.scheduledTime,
+      daysOfWeek: reminder.daysOfWeek,
+      isActive: reminder.isActive,
+      createdAt: reminder.createdAt,
+      updatedAt: reminder.updatedAt,
+    });
+  }
+}
