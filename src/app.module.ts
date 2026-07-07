@@ -14,6 +14,7 @@ import { PatientsModule } from './modules/patients/patients.module';
 import { PrescriptionsModule } from './modules/prescriptions/prescriptions.module';
 import { MedicalMeasurementsModule } from './modules/medical-measurements/medical-measurements.module';
 import { IntakesModule } from './modules/intakes/intakes.module';
+import { RemindersModule } from './modules/reminders/reminders.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { IntakesModule } from './modules/intakes/intakes.module';
     PrescriptionsModule,
     MedicalMeasurementsModule,
     IntakesModule,
+    RemindersModule,
   ],
   controllers: [AppController],
   providers: [
