@@ -13,6 +13,7 @@ import { MedicationsModule } from './modules/medications/medications.module';
 import { PatientsModule } from './modules/patients/patients.module';
 import { PrescriptionsModule } from './modules/prescriptions/prescriptions.module';
 import { MedicalMeasurementsModule } from './modules/medical-measurements/medical-measurements.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { MedicalMeasurementsModule } from './modules/medical-measurements/medica
     MedicationsModule,
     PatientsModule,
     PrescriptionsModule,
-    MedicalMeasurementsModule
+    MedicalMeasurementsModule,
+    NotificationsModule
   ],
   controllers: [AppController],
   providers: [
