@@ -23,10 +23,13 @@ import { CreateAuditLogDto } from '../../application/dtos/create-audit-log.dto';
 import { FindAuditLogsDto } from '../../application/dtos/find-audit-logs.dto';
 import { AuditLogMapper } from '../mappers/audit-log.mapper';
 import { AuditLogsService } from '../services/audit-logs.service';
+import { Permissions } from '../../../../common/decorators/permissions.decorator';
+import { Permission } from '../../../../common/enums/permission.enum';
 
 @ApiTags('Audit Logs')
 @ApiBearerAuth()
 @Controller('audit-logs')
+@Permissions(Permission.VIEW_AUDIT_LOGS)
 export class AuditLogsController {
   constructor(private readonly service: AuditLogsService) {}
 

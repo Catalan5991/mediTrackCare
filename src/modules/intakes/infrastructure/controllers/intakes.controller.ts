@@ -29,6 +29,10 @@ import { UpdateIntakeDto } from '../../application/dtos/update-intake.dto';
 import { IntakeEntity } from '../../domain/entities/intake.entity';
 import { IntakesExceptionFilter } from '../filters/intakes-exception.filter';
 import { IntakesService } from '../services/intakes.service';
+import { Permissions } from '../../../../common/decorators/permissions.decorator';
+import { Roles } from '../../../../common/decorators/roles.decorator';
+import { Permission } from '../../../../common/enums/permission.enum';
+import { SystemRole } from '../../../../common/enums/system-role.enum';
 
 @ApiTags('Intakes')
 @ApiBearerAuth()
@@ -39,6 +43,7 @@ export class IntakesController {
   constructor(private readonly intakesService: IntakesService) {}
 
   @Post()
+  @Permissions(Permission.REGISTER_INTAKES)
   @ApiOperation({
     summary: 'Registrar una toma de medicamento',
     description:
@@ -57,6 +62,7 @@ export class IntakesController {
   }
 
   @Get()
+  @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({
     summary: 'Listar tomas de medicamentos',
     description:
@@ -71,6 +77,7 @@ export class IntakesController {
   }
 
   @Get(':id')
+  @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({
     summary: 'Obtener una toma por ID',
   })
@@ -87,6 +94,7 @@ export class IntakesController {
   }
 
   @Patch(':id')
+  @Permissions(Permission.REGISTER_INTAKES)
   @ApiOperation({
     summary: 'Actualizar una toma',
   })
@@ -109,6 +117,7 @@ export class IntakesController {
   }
 
   @Delete(':id')
+  @Roles(SystemRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Eliminar una toma',

@@ -24,11 +24,14 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { UserResponseDto } from '../../application/dtos/user-response.dto';
+import { Permissions } from '../../../../common/decorators/permissions.decorator';
+import { Permission } from '../../../../common/enums/permission.enum';
 
 // Expone endpoints CRUD y mantiene la logica de negocio en los casos de uso.
 @ApiTags('Users')
 @ApiBearerAuth()
 @Controller('users')
+@Permissions(Permission.MANAGE_USERS)
 @UseFilters(UsersExceptionFilter)
 export class UsersController {
   constructor(

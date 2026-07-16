@@ -21,6 +21,10 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Permissions } from '../../../../common/decorators/permissions.decorator';
+import { Roles } from '../../../../common/decorators/roles.decorator';
+import { Permission } from '../../../../common/enums/permission.enum';
+import { SystemRole } from '../../../../common/enums/system-role.enum';
 
 // Expone los endpoints HTTP para crear, consultar, actualizar, cancelar y eliminar recetas.
 @ApiTags('Prescriptions')
@@ -32,6 +36,7 @@ export class PrescriptionsController {
 
   // Registra una receta con sus medicamentos asociados.
   @Post()
+  @Permissions(Permission.CREATE_PRESCRIPTIONS)
   @ApiOperation({ summary: 'Crear una receta' })
   @ApiResponse({ status: 201, description: 'Receta creada correctamente.' })
   @ApiResponse({ status: 400, description: 'Datos de receta invalidos.' })
@@ -45,6 +50,7 @@ export class PrescriptionsController {
 
   // Lista recetas aplicando paginacion y filtros opcionales.
   @Get()
+  @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({ summary: 'Listar recetas' })
   @ApiResponse({
     status: 200,
@@ -60,6 +66,7 @@ export class PrescriptionsController {
 
   // Consulta el detalle de una receta por su identificador.
   @Get(':id')
+  @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({ summary: 'Obtener una receta por id' })
   @ApiResponse({ status: 200, description: 'Receta obtenida correctamente.' })
   @ApiResponse({
@@ -73,6 +80,7 @@ export class PrescriptionsController {
 
   // Actualiza los datos generales y, si se envian, reemplaza los medicamentos.
   @Patch(':id')
+  @Permissions(Permission.CREATE_PRESCRIPTIONS)
   @ApiOperation({ summary: 'Actualizar una receta' })
   @ApiResponse({
     status: 200,
@@ -93,6 +101,7 @@ export class PrescriptionsController {
 
   // Cambia el estado de la receta para marcarla como cancelada o finalizada segun la regla actual.
   @Patch(':id/cancel')
+  @Permissions(Permission.CREATE_PRESCRIPTIONS)
   @ApiOperation({ summary: 'Cancelar una receta' })
   @ApiResponse({ status: 200, description: 'Receta cancelada correctamente.' })
   @ApiResponse({
@@ -106,6 +115,7 @@ export class PrescriptionsController {
 
   // Elimina una receta existente.
   @Delete(':id')
+  @Roles(SystemRole.ADMIN)
   @ApiOperation({ summary: 'Eliminar una receta' })
   @ApiResponse({ status: 200, description: 'Receta eliminada correctamente.' })
   @ApiResponse({

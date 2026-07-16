@@ -3,7 +3,6 @@ import {
   Get,
   Query,
   UseFilters,
-  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 import {
@@ -19,9 +18,10 @@ import {
 
 import { CurrentUser } from '../../../../common/decorators/current-user.decorator';
 import type { CurrentUser as AuthenticatedUser } from '../../../../common/decorators/current-user.decorator';
+import { Permissions } from '../../../../common/decorators/permissions.decorator';
 import { Roles } from '../../../../common/decorators/roles.decorator';
-import { JwtAuthGuard } from '../../../../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../../../../common/guards/roles.guard';
+import { Permission } from '../../../../common/enums/permission.enum';
+import { SystemRole } from '../../../../common/enums/system-role.enum';
 import { AdminDashboardResponseDto } from '../../application/dtos/admin-dashboard-response.dto';
 import {
   DashboardFilterDto,
@@ -46,8 +46,7 @@ export class DashboardController {
   ) {}
 
   @Get('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
+  @Permissions(Permission.VIEW_GENERAL_DASHBOARD)
   @ApiOperation({
     summary: 'Obtener dashboard administrativo',
     description:
@@ -86,8 +85,7 @@ export class DashboardController {
   }
 
   @Get('patient/me')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('PATIENT')
+  @Roles(SystemRole.PATIENT)
   @ApiOperation({
     summary: 'Obtener dashboard del paciente autenticado',
     description:
