@@ -21,6 +21,7 @@ import { CaregiversModule } from './modules/caregivers/caregivers.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { FilesModule } from './modules/files/files.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     RemindersModule,
     AuditLogsModule,
     DashboardModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [
