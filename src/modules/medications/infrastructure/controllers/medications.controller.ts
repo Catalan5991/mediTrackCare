@@ -21,6 +21,8 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Roles } from '../../../../common/decorators/roles.decorator';
+import { SystemRole } from '../../../../common/enums/system-role.enum';
 
 // Expone endpoints CRUD del catalogo y delega reglas a la capa de aplicacion.
 @ApiTags('Medications')
@@ -31,6 +33,7 @@ export class MedicationsController {
   constructor(private readonly medicationsService: MedicationsService) {}
 
   @Post()
+  @Roles(SystemRole.ADMIN)
   @ApiOperation({ summary: 'Crear un medicamento' })
   @ApiResponse({
     status: 201,
@@ -46,6 +49,7 @@ export class MedicationsController {
   }
 
   @Get()
+  @Roles(SystemRole.ADMIN, SystemRole.DOCTOR)
   @ApiOperation({ summary: 'Listar medicamentos' })
   @ApiResponse({
     status: 200,
@@ -64,6 +68,7 @@ export class MedicationsController {
   }
 
   @Get(':id')
+  @Roles(SystemRole.ADMIN, SystemRole.DOCTOR)
   @ApiOperation({ summary: 'Obtener un medicamento por id' })
   @ApiResponse({
     status: 200,
@@ -79,6 +84,7 @@ export class MedicationsController {
   }
 
   @Patch(':id')
+  @Roles(SystemRole.ADMIN)
   @ApiOperation({ summary: 'Actualizar un medicamento' })
   @ApiResponse({
     status: 200,
@@ -98,6 +104,7 @@ export class MedicationsController {
   }
 
   @Delete(':id')
+  @Roles(SystemRole.ADMIN)
   @ApiOperation({ summary: 'Eliminar un medicamento' })
   @ApiResponse({
     status: 200,

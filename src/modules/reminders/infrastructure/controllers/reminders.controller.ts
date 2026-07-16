@@ -29,6 +29,10 @@ import { UpdateReminderDto } from '../../application/dtos/update-reminder.dto';
 import { ReminderEntity } from '../../domain/entities/reminder.entity';
 import { RemindersExceptionFilter } from '../filters/reminders-exception.filter';
 import { RemindersService } from '../services/reminders.service';
+import { Permissions } from '../../../../common/decorators/permissions.decorator';
+import { Roles } from '../../../../common/decorators/roles.decorator';
+import { Permission } from '../../../../common/enums/permission.enum';
+import { SystemRole } from '../../../../common/enums/system-role.enum';
 
 @ApiTags('Reminders')
 @ApiBearerAuth()
@@ -39,6 +43,7 @@ export class RemindersController {
   constructor(private readonly remindersService: RemindersService) {}
 
   @Post()
+  @Roles(SystemRole.ADMIN, SystemRole.CAREGIVER, SystemRole.PATIENT)
   @ApiOperation({
     summary: 'Registrar un recordatorio',
     description:
@@ -57,6 +62,7 @@ export class RemindersController {
   }
 
   @Get()
+  @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({
     summary: 'Listar recordatorios',
     description:
@@ -71,6 +77,7 @@ export class RemindersController {
   }
 
   @Get(':id')
+  @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({
     summary: 'Obtener un recordatorio por ID',
   })
@@ -87,6 +94,7 @@ export class RemindersController {
   }
 
   @Patch(':id')
+  @Roles(SystemRole.ADMIN, SystemRole.CAREGIVER, SystemRole.PATIENT)
   @ApiOperation({
     summary: 'Actualizar un recordatorio',
   })
@@ -109,6 +117,7 @@ export class RemindersController {
   }
 
   @Delete(':id')
+  @Roles(SystemRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Eliminar un recordatorio',

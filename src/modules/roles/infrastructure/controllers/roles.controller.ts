@@ -21,12 +21,15 @@ import { QueryRoleDto } from '../../application/dtos/query-role.dto';
 import { UpdateRoleDto } from '../../application/dtos/update-role.dto';
 import { RoleExceptionFilter } from '../filters/role-exception.filter';
 import { RolesService } from '../services/roles.service';
+import { Permissions } from '../../../../common/decorators/permissions.decorator';
+import { Permission } from '../../../../common/enums/permission.enum';
 
 // Controller HTTP del modulo Roles. Recibe parametros, activa validaciones y
 // delega en el servicio; las reglas de negocio viven en casos de uso.
 @ApiTags('Roles')
 @ApiBearerAuth()
 @Controller('roles')
+@Permissions(Permission.MANAGE_ROLES)
 @UseFilters(RoleExceptionFilter)
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}

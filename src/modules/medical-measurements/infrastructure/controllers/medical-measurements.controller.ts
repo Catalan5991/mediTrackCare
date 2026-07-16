@@ -29,6 +29,10 @@ import { FindMedicalMeasurementsDto } from '../../application/dtos/find-medical-
 import { MedicalMeasurementEntity } from '../../domain/entities/medical-measurement.entity';
 import { MedicalMeasurementsService } from '../services/medical-measurements.service';
 import { MedicalMeasurementsExceptionFilter } from '../filters/medical-measurements-exception.filter';
+import { Permissions } from '../../../../common/decorators/permissions.decorator';
+import { Roles } from '../../../../common/decorators/roles.decorator';
+import { Permission } from '../../../../common/enums/permission.enum';
+import { SystemRole } from '../../../../common/enums/system-role.enum';
 
 @ApiTags('Medical Measurements')
 @ApiBearerAuth()
@@ -41,6 +45,7 @@ export class MedicalMeasurementsController {
   ) {}
 
   @Post()
+  @Permissions(Permission.REGISTER_MEASUREMENTS)
   @ApiOperation({
     summary: 'Registrar una medición médica',
     description:
@@ -59,6 +64,7 @@ export class MedicalMeasurementsController {
   }
 
   @Get()
+  @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({
     summary: 'Listar mediciones médicas',
     description:
@@ -73,6 +79,7 @@ export class MedicalMeasurementsController {
   }
 
   @Get(':id')
+  @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({
     summary: 'Obtener una medición médica por ID',
   })
@@ -89,6 +96,7 @@ export class MedicalMeasurementsController {
   }
 
   @Patch(':id')
+  @Permissions(Permission.REGISTER_MEASUREMENTS)
   @ApiOperation({
     summary: 'Actualizar una medición médica',
   })
@@ -111,6 +119,7 @@ export class MedicalMeasurementsController {
   }
 
   @Delete(':id')
+  @Roles(SystemRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Eliminar una medición médica',

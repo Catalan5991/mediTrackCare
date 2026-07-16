@@ -21,6 +21,10 @@ import { QueryCaregiverDto } from '../../application/dtos/query-caregiver.dto';
 import { UpdateCaregiverDto } from '../../application/dtos/update-caregiver.dto';
 import { CaregiverExceptionFilter } from '../filters/caregiver-exception.filter';
 import { CaregiversService } from '../services/caregivers.service';
+import { Permissions } from '../../../../common/decorators/permissions.decorator';
+import { Roles } from '../../../../common/decorators/roles.decorator';
+import { Permission } from '../../../../common/enums/permission.enum';
+import { SystemRole } from '../../../../common/enums/system-role.enum';
 
 // Controller HTTP del modulo Caregivers. Se limita a recibir parametros,
 // activar validaciones/filters y delegar en el servicio; las reglas de negocio
@@ -33,6 +37,7 @@ export class CaregiversController {
   constructor(private readonly caregiversService: CaregiversService) {}
 
   @Post()
+  @Roles(SystemRole.ADMIN)
   @ApiOperation({ summary: 'Crear un cuidador' })
   @ApiResponse({ status: 201, description: 'Cuidador creado correctamente.' })
   @ApiResponse({ status: 400, description: 'Datos de cuidador invalidos.' })
@@ -50,6 +55,7 @@ export class CaregiversController {
   }
 
   @Get()
+  @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({ summary: 'Obtener listado de cuidadores' })
   @ApiResponse({
     status: 200,
@@ -66,6 +72,7 @@ export class CaregiversController {
   }
 
   @Get(':id')
+  @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({ summary: 'Obtener un cuidador por id' })
   @ApiResponse({ status: 200, description: 'Cuidador obtenido correctamente.' })
   @ApiResponse({
@@ -79,6 +86,7 @@ export class CaregiversController {
   }
 
   @Patch(':id')
+  @Roles(SystemRole.ADMIN)
   @ApiOperation({ summary: 'Actualizar un cuidador' })
   @ApiResponse({
     status: 200,
@@ -103,6 +111,7 @@ export class CaregiversController {
   }
 
   @Delete(':id')
+  @Roles(SystemRole.ADMIN)
   @ApiOperation({ summary: 'Eliminar un cuidador' })
   @ApiResponse({
     status: 200,
