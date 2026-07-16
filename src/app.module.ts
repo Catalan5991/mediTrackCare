@@ -18,6 +18,7 @@ import { IntakesModule } from './modules/intakes/intakes.module';
 import { RemindersModule } from './modules/reminders/reminders.module';
 import { CaregiversModule } from './modules/caregivers/caregivers.module';
 import { RolesModule } from './modules/roles/roles.module';
+import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 
 @Module({
   imports: [
@@ -33,9 +34,10 @@ import { RolesModule } from './modules/roles/roles.module';
     CaregiversModule,
     PrescriptionsModule,
     MedicalMeasurementsModule,
-    NotificationsModule
+    NotificationsModule,
     IntakesModule,
     RemindersModule,
+    AuditLogsModule,
   ],
   controllers: [AppController],
   providers: [
