@@ -22,6 +22,7 @@ import { RolesModule } from './modules/roles/roles.module';
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { FilesModule } from './modules/files/files.module';
+import { DoctorsModule } from './modules/doctors/doctors.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { FilesModule } from './modules/files/files.module';
     UsersModule,
     MedicationsModule,
     PatientsModule,
+    DoctorsModule,
     CaregiversModule,
     PrescriptionsModule,
     MedicalMeasurementsModule,

@@ -8,7 +8,7 @@ import { PrescriptionEntity } from '../../domain/entities/prescription.entity';
 import { PrescriptionNotFoundException } from '../../domain/exceptions/prescription-not-found.exception';
 
 @Injectable()
-// Caso de uso para cerrar el ciclo de una receta existente.
+// Caso de uso para cancelar una receta existente.
 export class CancelPrescriptionUseCase {
   constructor(
     @Inject(PRESCRIPTION_REPOSITORY)
@@ -22,9 +22,9 @@ export class CancelPrescriptionUseCase {
       throw new PrescriptionNotFoundException(id);
     }
 
-    // La regla actual marca la receta como finalizada al ejecutar la ruta de cancelacion.
+    // La ruta de cancelación debe reflejar el estado CANCELADO del dominio.
     return this.repository.update(id, {
-      status: PrescriptionStatus.FINALIZADO,
+      status: PrescriptionStatus.CANCELADO,
     });
   }
 }

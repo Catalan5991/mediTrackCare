@@ -169,8 +169,13 @@ export class PrismaPrescriptionsRepository implements PrescriptionRepository {
   }
 
   async delete(id: number): Promise<void> {
-    await this.prisma.prescription.delete({
-      where: { id },
+    await this.prisma.$transaction(async (transaction) => {
+      await transaction.prescriptionItem.deleteMany({
+        where: { prescriptionId: id },
+      });
+      await transaction.prescription.delete({
+        where: { id },
+      });
     });
   }
 }
