@@ -18,7 +18,7 @@ export class CreateAuditLogDto {
   @IsInt()
   userId?: number;
 
-  @ApiProperty({ example: 'prescriptions' })
+  @ApiProperty({ example: 'prescripciones' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
@@ -30,7 +30,7 @@ export class CreateAuditLogDto {
   @MaxLength(100)
   action!: string;
 
-  @ApiProperty({ example: 'Prescription' })
+  @ApiProperty({ example: 'Prescripcion' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)

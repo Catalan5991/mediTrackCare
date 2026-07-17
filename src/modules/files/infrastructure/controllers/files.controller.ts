@@ -30,6 +30,10 @@ import { UpdateFileDto } from '../../application/dtos/update-file.dto';
 import { FileExceptionFilter } from '../filters/file-exception.filter';
 import { FileMapper } from '../mappers/file.mapper';
 import { FilesService } from '../services/files.service';
+import { Permissions } from '../../../../common/decorators/permissions.decorator';
+import { Roles } from '../../../../common/decorators/roles.decorator';
+import { Permission } from '../../../../common/enums/permission.enum';
+import { SystemRole } from '../../../../common/enums/system-role.enum';
 
 @ApiTags('Files')
 @Controller('files')
@@ -38,6 +42,8 @@ export class FilesController {
   constructor(private readonly service: FilesService) {}
 
   @Post()
+  // Crear evidencias requiere el permiso funcional configurado para el rol.
+  @Permissions(Permission.UPLOAD_EVIDENCES)
   @ApiOperation({ summary: 'Registrar un archivo.' })
   @ApiCreatedResponse({ type: FileResponseDto })
   async create(@Body() dto: CreateFileDto): Promise<FileResponseDto> {
@@ -45,6 +51,9 @@ export class FilesController {
   }
 
   @Get()
+  // La consulta usa el permiso clinico compartido por los roles que pueden ver
+  // pacientes bajo su alcance; los filtros determinan el conjunto solicitado.
+  @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({ summary: 'Listar archivos con filtros y paginacion.' })
   @ApiOkResponse({ type: PaginatedFilesResponseDto })
   async findAll(
@@ -58,6 +67,8 @@ export class FilesController {
   }
 
   @Get(':id')
+  // Mantiene la misma politica del listado para consultar un archivo concreto.
+  @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({ summary: 'Obtener un archivo por ID.' })
   @ApiParam({ name: 'id', example: 1 })
   @ApiOkResponse({ type: FileResponseDto })
@@ -68,6 +79,8 @@ export class FilesController {
   }
 
   @Patch(':id')
+  // Modificar metadatos se considera parte de la gestion de evidencias.
+  @Permissions(Permission.UPLOAD_EVIDENCES)
   @ApiOperation({ summary: 'Actualizar los metadatos de un archivo.' })
   @ApiOkResponse({ type: FileResponseDto })
   async update(
@@ -78,6 +91,9 @@ export class FilesController {
   }
 
   @Delete(':id')
+  // La eliminacion queda restringida al administrador para proteger historial
+  // clinico y evitar que una evidencia sea retirada por un rol operativo.
+  @Roles(SystemRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Eliminar el registro de un archivo.' })
   @ApiNoContentResponse()
