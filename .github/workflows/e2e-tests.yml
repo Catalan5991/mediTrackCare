@@ -25,6 +25,8 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/meditrackcare_e2e?schema=public
       JWT_SECRET: ci-only-secret-at-least-32-characters
       JWT_EXPIRES_IN: 1h
+      E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+      E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
