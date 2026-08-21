@@ -1,27 +1,33 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-//importamos los archivos para Swagger
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { configureApp } from './configure-app';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   configureApp(app);
 
+  // Configuración global de Swagger
   const config = new DocumentBuilder()
-    .setTitle('MediTrackCare API')
-    .setDescription(
-      'Documentación de la API para la gestión de pacientes, medicamentos, recetas, mediciones médicas y tomas de medicamentos.',
-    )
+    .setTitle('MediTrack Care API')
+    .setDescription('Documentación interactiva de la API REST para MediTrack Care')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Ingresa tu token JWT',
+        in: 'header',
+      },
+      'JWT-auth',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document, {
-    customSiteTitle: 'MediTrackCare API Docs',
-  });
+  SwaggerModule.setup('api', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(3000);
 }
 bootstrap();

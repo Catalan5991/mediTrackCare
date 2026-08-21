@@ -1,120 +1,55 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseBoolPipe,
-  ParseIntPipe,
-  Patch,
-  Post,
-  Query,
-  UseFilters,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { MedicationsService } from '../services/medications.service';
 import { CreateMedicationDto } from '../../application/dtos/create-medication.dto';
 import { UpdateMedicationDto } from '../../application/dtos/update-medication.dto';
-import { MedicationExceptionFilter } from '../filters/medication-exception.filter';
-import { MedicationsService } from '../services/medications.service';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
-import { Roles } from '../../../../common/decorators/roles.decorator';
-import { SystemRole } from '../../../../common/enums/system-role.enum';
 
-// Expone endpoints CRUD del catalogo y delega reglas a la capa de aplicacion.
 @ApiTags('Medications')
-@ApiBearerAuth()
-@Controller('medications')
-@UseFilters(MedicationExceptionFilter)
+@ApiBearerAuth('JWT-auth')
+@Controller('api/medications')
 export class MedicationsController {
   constructor(private readonly medicationsService: MedicationsService) {}
 
   @Post()
-  @Roles(SystemRole.ADMIN)
-  @ApiOperation({ summary: 'Crear un medicamento' })
-  @ApiResponse({
-    status: 201,
-    description: 'Medicamento creado correctamente.',
-  })
-  @ApiResponse({ status: 400, description: 'Datos de medicamento invalidos.' })
-  @ApiResponse({
-    status: 401,
-    description: 'No autorizado. Token JWT invalido o no proporcionado.',
-  })
-  create(@Body() createMedicationDto: CreateMedicationDto) {
-    return this.medicationsService.create(createMedicationDto);
+  @ApiOperation({ summary: 'Registrar un nuevo fármaco en el catálogo general' })
+  @ApiResponse({ status: 201, description: 'Medicamento registrado exitosamente' })
+  @ApiResponse({ status: 400, description: 'Cuerpo de la petición inválido' })
+  @ApiResponse({ status: 403, description: 'Prohibido - Requiere rol administrativo' })
+  create(@Body() dto: CreateMedicationDto) {
+    return this.medicationsService.create(dto);
   }
 
   @Get()
-  @Roles(SystemRole.ADMIN, SystemRole.DOCTOR)
-  @ApiOperation({ summary: 'Listar medicamentos' })
-  @ApiResponse({
-    status: 200,
-    description: 'Listado de medicamentos obtenido correctamente.',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'No autorizado. Token JWT invalido o no proporcionado.',
-  })
-  findAll(
-    @Query('search') search?: string,
-    @Query('isActive', new ParseBoolPipe({ optional: true }))
-    isActive?: boolean,
-  ) {
+  @ApiOperation({ summary: 'Consultar el catálogo de medicamentos disponibles' })
+  @ApiQuery({ name: 'search', required: false, description: 'Texto para filtrar por nombre' })
+  @ApiQuery({ name: 'isActive', required: false, description: 'Filtro por estado activo o inactivo' })
+  @ApiResponse({ status: 200, description: 'Catálogo de medicamentos recuperado' })
+  findAll(@Query('search') search?: string, @Query('isActive') isActive?: boolean) {
     return this.medicationsService.findAll(search, isActive);
   }
 
   @Get(':id')
-  @Roles(SystemRole.ADMIN, SystemRole.DOCTOR)
-  @ApiOperation({ summary: 'Obtener un medicamento por id' })
-  @ApiResponse({
-    status: 200,
-    description: 'Medicamento obtenido correctamente.',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'No autorizado. Token JWT invalido o no proporcionado.',
-  })
-  @ApiResponse({ status: 404, description: 'Medicamento no encontrado.' })
+  @ApiOperation({ summary: 'Consultar un medicamento por su ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'ID numérico del medicamento' })
+  @ApiResponse({ status: 200, description: 'Medicamento encontrado' })
+  @ApiResponse({ status: 404, description: 'Medicamento no encontrado' })
   findById(@Param('id', ParseIntPipe) id: number) {
     return this.medicationsService.findById(id);
   }
 
   @Patch(':id')
-  @Roles(SystemRole.ADMIN)
-  @ApiOperation({ summary: 'Actualizar un medicamento' })
-  @ApiResponse({
-    status: 200,
-    description: 'Medicamento actualizado correctamente.',
-  })
-  @ApiResponse({ status: 400, description: 'Datos de medicamento invalidos.' })
-  @ApiResponse({
-    status: 401,
-    description: 'No autorizado. Token JWT invalido o no proporcionado.',
-  })
-  @ApiResponse({ status: 404, description: 'Medicamento no encontrado.' })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateMedicationDto: UpdateMedicationDto,
-  ) {
-    return this.medicationsService.update(id, updateMedicationDto);
+  @ApiOperation({ summary: 'Actualizar las características de un medicamento existente' })
+  @ApiParam({ name: 'id', type: Number, description: 'ID del medicamento' })
+  @ApiResponse({ status: 200, description: 'Medicamento actualizado' })
+  @ApiResponse({ status: 403, description: 'Prohibido - Rol insuficiente' })
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateMedicationDto) {
+    return this.medicationsService.update(id, dto);
   }
 
   @Delete(':id')
-  @Roles(SystemRole.ADMIN)
-  @ApiOperation({ summary: 'Eliminar un medicamento' })
-  @ApiResponse({
-    status: 200,
-    description: 'Medicamento eliminado correctamente.',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'No autorizado. Token JWT invalido o no proporcionado.',
-  })
-  @ApiResponse({ status: 404, description: 'Medicamento no encontrado.' })
+  @ApiOperation({ summary: 'Desactivar lógicamente un medicamento' })
+  @ApiParam({ name: 'id', type: Number, description: 'ID del medicamento' })
+  @ApiResponse({ status: 200, description: 'Medicamento desactivado correctamente' })
   delete(@Param('id', ParseIntPipe) id: number) {
     return this.medicationsService.delete(id);
   }

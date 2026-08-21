@@ -1,73 +1,72 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  ArrayMinSize,
-  IsArray,
-  IsDateString,
-  IsInt,
-  IsOptional,
-  IsPositive,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, IsArray, ValidateNested, IsDateString } from 'class-validator';
 import { Type } from 'class-transformer';
-import { CreatePrescriptionItemDto } from './create-prescription-item.dto';
 
-// Valida el cuerpo necesario para crear una receta medica.
-export class CreatePrescriptionDto {
-  @ApiProperty({ example: 1, minimum: 1, description: 'Id del paciente.' })
+export class CreatePrescriptionItemDto {
+  @ApiProperty({ description: 'ID del medicamento a prescribir', example: 1 })
   @IsInt()
-  @IsPositive()
-  patientId!: number;
+  @IsNotEmpty()
+  medicationId!: number;
 
-  @ApiPropertyOptional({
-    example: 2,
-    minimum: 1,
-    description: 'Id del doctor que emite la receta.',
-  })
-  @IsInt()
-  @IsPositive()
-  @IsOptional()
-  doctorId?: number;
+  @ApiProperty({ description: 'Dosis prescrita', example: '500 mg' })
+  @IsString()
+  @IsNotEmpty()
+  dose!: string;
 
-  @ApiPropertyOptional({
-    example: 'Faringitis aguda',
-    description: 'Diagnostico asociado.',
-  })
+  @ApiProperty({ description: 'Frecuencia de administración', example: 'Cada 8 horas' })
+  @IsString()
+  @IsNotEmpty()
+  frequency!: string;
+
+  @ApiProperty({ description: 'Duración del tratamiento', example: '7 días' })
+  @IsString()
+  @IsNotEmpty()
+  duration!: string;
+
+  @ApiPropertyOptional({ description: 'Instrucciones específicas de consumo', example: 'Tomar después de los alimentos' })
   @IsString()
   @IsOptional()
-  diagnosis?: string;
+  instructions?: string;
 
-  @ApiPropertyOptional({
-    example: 'Mantener hidratacion y reposo.',
-    description: 'Indicaciones generales.',
-  })
+  @ApiPropertyOptional({ description: 'Fecha de inicio del tratamiento', example: '2026-08-20T00:00:00.000Z' })
+  @IsDateString()
+  @IsOptional()
+  startDate?: string;
+
+  @ApiPropertyOptional({ description: 'Fecha de término del tratamiento', example: '2026-08-27T00:00:00.000Z' })
+  @IsDateString()
+  @IsOptional()
+  endDate?: string;
+}
+
+export class CreatePrescriptionDto {
+  @ApiProperty({ description: 'ID del paciente asignado a la receta', example: 1 })
+  @IsInt()
+  @IsNotEmpty()
+  patientId!: number;
+
+  @ApiProperty({ description: 'Diagnóstico médico asociado', example: 'Infección respiratoria aguda' })
+  @IsString()
+  @IsNotEmpty()
+  diagnosis!: string;
+
+  @ApiPropertyOptional({ description: 'Instrucciones generales de cuidado', example: 'Guardar reposo' })
   @IsString()
   @IsOptional()
   generalInstructions?: string;
 
-  @ApiPropertyOptional({
-    example: '2026-07-01',
-    description: 'Fecha de emision en formato ISO.',
-  })
+  @ApiPropertyOptional({ description: 'Fecha de emisión de la receta', example: '2026-08-20T00:00:00.000Z' })
   @IsDateString()
   @IsOptional()
   issueDate?: string;
 
-  @ApiPropertyOptional({
-    example: '2026-07-15',
-    description: 'Fecha de expiracion en formato ISO.',
-  })
+  @ApiPropertyOptional({ description: 'Fecha de expiración de la receta', example: '2026-08-30T00:00:00.000Z' })
   @IsDateString()
   @IsOptional()
   expirationDate?: string;
 
-  // La receta debe incluir al menos un medicamento indicado.
-  @ApiProperty({
-    type: [CreatePrescriptionItemDto],
-    description: 'Medicamentos incluidos en la receta.',
-  })
+  @ApiProperty({ description: 'Listado de medicamentos recetados', type: [CreatePrescriptionItemDto] })
   @IsArray()
-  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => CreatePrescriptionItemDto)
   items!: CreatePrescriptionItemDto[];

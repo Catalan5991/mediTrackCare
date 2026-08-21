@@ -1,52 +1,33 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
-import {
-  MedicationForm,
-  MedicationRoute,
-} from '../../../../../generated/prisma/client';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { MedicationForm, MedicationRoute } from '../../../../../generated/prisma/client';
 
-// Entrada validada para registrar medicamentos dentro del catalogo.
 export class CreateMedicationDto {
-  @ApiProperty({ example: 'Paracetamol', minLength: 2, maxLength: 100 })
+  @ApiProperty({ description: 'Nombre del medicamento', example: 'Paracetamol' })
   @IsString()
   @IsNotEmpty()
-  @MinLength(2)
-  @MaxLength(100)
   name!: string;
 
-  @ApiPropertyOptional({
-    example: 'Analgesico y antipiretico.',
-    maxLength: 250,
-  })
-  @IsOptional()
+  @ApiPropertyOptional({ description: 'Descripción o notas terapéuticas', example: 'Analgésico y antipirético' })
   @IsString()
-  @MaxLength(250)
+  @IsOptional()
   description?: string;
 
-  @ApiProperty({ enum: MedicationForm, example: MedicationForm.TABLETA })
+  @ApiProperty({ description: 'Forma o presentación farmacéutica', enum: MedicationForm, example: 'TABLETA' })
   @IsEnum(MedicationForm)
   presentation!: MedicationForm;
 
-  @ApiPropertyOptional({ example: '500 mg', maxLength: 80 })
-  @IsOptional()
+  @ApiPropertyOptional({ description: 'Concentración del fármaco', example: '500 mg' })
   @IsString()
-  @MaxLength(80)
+  @IsOptional()
   concentration?: string;
 
-  @ApiPropertyOptional({ example: 'mg', maxLength: 50 })
-  @IsOptional()
+  @ApiPropertyOptional({ description: 'Unidad de medida', example: 'mg' })
   @IsString()
-  @MaxLength(50)
+  @IsOptional()
   unit?: string;
 
-  @ApiProperty({ enum: MedicationRoute, example: MedicationRoute.ORAL })
+  @ApiProperty({ description: 'Vía de administración', enum: MedicationRoute, example: 'ORAL' })
   @IsEnum(MedicationRoute)
   route!: MedicationRoute;
 }
