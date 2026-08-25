@@ -5,6 +5,7 @@ import { GetUsersUseCase } from '../../application/use-cases/get-users.use-case'
 import { GetUserUseCase } from '../../application/use-cases/get-user.use-case';
 import { UpdateUserUseCase } from '../../application/use-cases/update-user.use-case';
 import { DeleteUserUseCase } from '../../application/use-cases/delete-user.use-case';
+import { SystemRole } from '../../../../common/enums/system-role.enum';
 
 /**
  * Pruebas unitarias de UsersController.
@@ -50,7 +51,7 @@ describe('Controlador de usuarios', () => {
       name: 'Usuario E2E',
       email: 'e2e@test.local',
       password: 'Password123',
-      role: 'PATIENT',
+      role: SystemRole.PATIENT,
     };
     create.execute.mockResolvedValue({ id: 1, ...dto });
     // Act y Assert: create debe propagar el resultado del caso de uso.

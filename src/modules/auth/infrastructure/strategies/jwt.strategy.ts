@@ -42,7 +42,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const user = await this.authUserRepository.findById(payload.sub);
 
     // Un token firmado no es suficiente si el usuario fue desactivado despues.
-    if (!user || !user.isActive) {
+    if (!user || !user.isActive || !user.roleIsActive) {
       throw new UnauthorizedException('Token inválido o usuario inactivo.');
     }
 

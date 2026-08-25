@@ -31,7 +31,7 @@ import { Permission } from '../../../../common/enums/permission.enum';
 @ApiTags('Users')
 @ApiBearerAuth()
 @Controller('users')
-//@Permissions(Permission.MANAGE_USERS)
+@Permissions(Permission.MANAGE_USERS)
 @UseFilters(UsersExceptionFilter)
 export class UsersController {
   /**

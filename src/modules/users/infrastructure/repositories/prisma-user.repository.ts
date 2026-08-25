@@ -25,18 +25,16 @@ export class PrismaUserRepository implements UsersRepository {
    */
   async create(data: CreateUserData): Promise<User> {
     const roleName = data.role ?? DEFAULT_ROLE_NAME;
+    const role = await this.prisma.role.findFirstOrThrow({
+      where: { name: roleName, isActive: true },
+    });
 
     const user = await this.prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
         password: data.password,
-        role: {
-          connectOrCreate: {
-            where: { name: roleName },
-            create: { name: roleName },
-          },
-        },
+        role: { connect: { id: role.id } },
         isActive: data.isActive,
       },
       include: {
@@ -89,20 +87,18 @@ export class PrismaUserRepository implements UsersRepository {
    * @returns Promesa que resuelve con el resultado de la operación.
    */
   async update(id: number, data: UpdateUserData): Promise<User> {
+    const role = data.role
+      ? await this.prisma.role.findFirstOrThrow({
+          where: { name: data.role, isActive: true },
+        })
+      : undefined;
     const user = await this.prisma.user.update({
       where: { id },
       data: {
         name: data.name,
         email: data.email,
         password: data.password,
-        role: data.role
-          ? {
-              connectOrCreate: {
-                where: { name: data.role },
-                create: { name: data.role },
-              },
-            }
-          : undefined,
+        role: role ? { connect: { id: role.id } } : undefined,
         isActive: data.isActive,
       },
       include: {

@@ -29,7 +29,7 @@ import { Permission } from '../../../../common/enums/permission.enum';
 @ApiTags('Roles')
 @ApiBearerAuth()
 @Controller('roles')
-//@Permissions(Permission.MANAGE_ROLES)
+@Permissions(Permission.MANAGE_ROLES)
 @UseFilters(RoleExceptionFilter)
 export class RolesController {
   /**

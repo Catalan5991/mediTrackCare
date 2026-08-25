@@ -1,15 +1,17 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { SystemRole } from '../../../../common/enums/system-role.enum';
 
 // Entrada validada para crear roles desde HTTP. Las validaciones se ejecutan
 // antes de llegar al caso de uso, dejando ahi solo reglas de negocio.
 export class CreateRoleDto {
   @ApiProperty({
-    example: 'CUIDADOR',
-    description: 'Nombre unico del rol dentro del sistema.',
+    example: SystemRole.CAREGIVER,
+    enum: SystemRole,
+    description: 'Nombre del catálogo de roles soportado por la matriz de permisos.',
   })
-  @IsString()
-  name!: string;
+  @IsEnum(SystemRole)
+  name!: SystemRole;
 
   @ApiPropertyOptional({
     example: 'Usuario responsable de apoyar el seguimiento del paciente.',

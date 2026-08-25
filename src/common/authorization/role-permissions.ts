@@ -13,17 +13,7 @@ export type RolePermissionConfig = Partial<Record<Permission, string>>;
 // defecto y habilitarla de forma explicita por ambiente.
 export const ROLE_PERMISSIONS: Record<SystemRole, Permission[]> = {
   // Admin puede ejecutar todas las acciones operativas y administrativas.
-  [SystemRole.ADMIN]: [
-    Permission.VIEW_GENERAL_DASHBOARD,
-    Permission.MANAGE_USERS,
-    Permission.VIEW_ASSIGNED_PATIENTS,
-    Permission.CREATE_PRESCRIPTIONS,
-    Permission.REGISTER_INTAKES,
-    Permission.REGISTER_MEASUREMENTS,
-    Permission.VIEW_AUDIT_LOGS,
-    Permission.MANAGE_ROLES,
-    Permission.UPLOAD_EVIDENCES,
-  ],
+  [SystemRole.ADMIN]: Object.values(Permission),
   // Doctor consulta pacientes asignados, crea recetas, registra mediciones y
   // puede cargar evidencias. Dashboard general y tomas quedan configurables.
   [SystemRole.DOCTOR]: [

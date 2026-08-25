@@ -19,6 +19,7 @@ export class AuthUserMapper {
       email: prismaUser.email,
       password: prismaUser.password,
       role: prismaUser.role.name,
+      roleIsActive: prismaUser.role.isActive,
       isActive: prismaUser.isActive,
       createdAt: prismaUser.createdAt,
       updatedAt: prismaUser.updatedAt,

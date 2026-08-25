@@ -23,17 +23,15 @@ export class PrismaAuthUserRepository implements AuthUserRepository {
    * @returns Promesa que resuelve con el resultado de la operación.
    */
   async create(data: CreateAuthUserData): Promise<AuthUser> {
+    const patientRole = await this.prisma.role.findFirstOrThrow({
+      where: { name: DEFAULT_ROLE_NAME, isActive: true },
+    });
     const user = await this.prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
         password: data.password,
-        role: {
-          connectOrCreate: {
-            where: { name: DEFAULT_ROLE_NAME },
-            create: { name: DEFAULT_ROLE_NAME },
-          },
-        },
+        role: { connect: { id: patientRole.id } },
       },
       include: {
         role: true,

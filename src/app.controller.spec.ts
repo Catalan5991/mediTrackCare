@@ -19,4 +19,14 @@ describe('Controlador principal de la aplicación', () => {
       expect(appController.getHello()).toBe('Hello World!');
     });
   });
+
+  describe('salud del servicio', () => {
+    it('informa que la API está disponible', () => {
+      const result = appController.getHealth();
+
+      expect(result.status).toBe('ok');
+      expect(result.service).toBe('MediTrackCare API');
+      expect(Number.isNaN(Date.parse(result.timestamp))).toBe(false);
+    });
+  });
 });

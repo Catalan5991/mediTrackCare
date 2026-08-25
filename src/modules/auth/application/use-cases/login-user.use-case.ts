@@ -40,7 +40,7 @@ export class LoginUserUseCase {
     const user = await this.authUserRepository.findByEmail(email);
 
     // Se usa la misma excepcion para no revelar si fallo el correo o la contrasena.
-    if (!user || !user.isActive) {
+    if (!user || !user.isActive || !user.roleIsActive) {
       throw new InvalidCredentialsException();
     }
 

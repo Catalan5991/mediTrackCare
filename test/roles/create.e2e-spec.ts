@@ -6,7 +6,7 @@ import {
   iniciarContextoModulosE2E,
 } from '../helpers/assigned-modules-e2e.helper';
 
-// Crea un rol temporal único y verifica el permiso administrativo requerido.
+// Verifica que el catálogo de roles sea cerrado y requiera permiso administrativo.
 describe('Roles - Crear', () => {
   let c: ContextoModulosE2E;
 
@@ -16,21 +16,20 @@ describe('Roles - Crear', () => {
 
   afterAll(async () => cerrarContextoModulosE2E(c));
 
-  it('crea un rol con permiso administrativo', async () => {
-    const dto = {
-      name: `E2E_ROLE_${c.sufijo}`,
-      description: 'Rol temporal E2E',
-    };
-    const r = await request(c.servidor)
+  it('rechaza roles que no pertenecen al catálogo de seguridad', async () => {
+    await request(c.servidor)
       .post('/api/roles')
       .set(bearer(c.tokens.ADMIN))
-      .send(dto)
-      .expect(201);
-    c.ids.roles.push(r.body.id as number);
+      .send({ name: `E2E_ROLE_${c.sufijo}`, description: 'No soportado' })
+      .expect(400);
+  });
 
-    expect(r.body).toEqual(
-      expect.objectContaining({ id: expect.any(Number), name: dto.name }),
-    );
+  it('impide duplicar un rol del sistema ya precargado', async () => {
+    await request(c.servidor)
+      .post('/api/roles')
+      .set(bearer(c.tokens.ADMIN))
+      .send({ name: 'ADMIN', description: 'Duplicado' })
+      .expect(409);
   });
 
   it('rechaza a un paciente sin permiso', async () => {

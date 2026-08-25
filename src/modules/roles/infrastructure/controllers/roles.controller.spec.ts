@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RolesController } from './roles.controller';
 import { RolesService } from '../services/roles.service';
+import { SystemRole } from '../../../../common/enums/system-role.enum';
 
 /**
  * Pruebas unitarias de RolesController.
@@ -34,7 +35,7 @@ describe('Controlador de roles', () => {
 
   it('debe crear un rol', async () => {
     // El DTO de creación debe conservar nombre y descripción durante la delegación.
-    const dto = { name: 'E2E_ROLE', description: 'Rol de prueba' };
+    const dto = { name: SystemRole.CAREGIVER, description: 'Rol de prueba' };
     service.create.mockResolvedValue({ id: 1, ...dto } as never);
     await expect(controller.create(dto)).resolves.toEqual({ id: 1, ...dto });
     expect(service.create).toHaveBeenCalledWith(dto);

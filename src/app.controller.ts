@@ -18,4 +18,15 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  /** Endpoint público utilizado por Docker y el proveedor VPS. */
+  @Get('health')
+  @Public()
+  getHealth() {
+    return {
+      status: 'ok',
+      service: 'MediTrackCare API',
+      timestamp: new Date().toISOString(),
+    };
+  }
 }

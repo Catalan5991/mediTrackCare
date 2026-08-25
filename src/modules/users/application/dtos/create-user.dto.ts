@@ -2,12 +2,13 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsEmail,
-  IsIn,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
+import { SystemRole } from '../../../../common/enums/system-role.enum';
 
 // Entrada validada para crear usuarios desde la API administrativa.
 export class CreateUserDto {
@@ -38,13 +39,12 @@ export class CreateUserDto {
   // Si no se envia, el repositorio/schema puede aplicar el rol por defecto.
   @ApiPropertyOptional({
     example: 'PATIENT',
-    enum: ['PATIENT', 'CAREGIVER', 'DOCTOR', 'ADMIN'],
+    enum: SystemRole,
     description: 'Rol asignado al usuario.',
   })
   @IsOptional()
-  @IsString()
-  @IsIn(['PATIENT', 'CAREGIVER', 'DOCTOR', 'ADMIN'])
-  role?: string;
+  @IsEnum(SystemRole)
+  role?: SystemRole;
 
   @ApiPropertyOptional({
     example: true,

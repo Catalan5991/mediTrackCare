@@ -4,6 +4,7 @@ export type AuthUserProps = {
   email: string;
   password: string;
   role: string;
+  roleIsActive: boolean;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -58,6 +59,9 @@ export class AuthUser {
    */
   get role(): string {
     return this.props.role;
+  }
+  get roleIsActive(): boolean {
+    return this.props.roleIsActive;
   }
   /**
    * Ejecuta la operación is active.
