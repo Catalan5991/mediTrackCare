@@ -40,10 +40,18 @@ import { SystemRole } from '../../../../common/enums/system-role.enum';
 @UseFilters(MedicalMeasurementsExceptionFilter)
 // Expone los endpoints HTTP y delega la logica de aplicacion al servicio.
 export class MedicalMeasurementsController {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param medicalMeasurementsService Servicio que coordina las operaciones de medical measurements service.
+   */
   constructor(
     private readonly medicalMeasurementsService: MedicalMeasurementsService,
   ) {}
-
+  /**
+   * Crea un medicion medica con los datos recibidos.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Post()
   @Permissions(Permission.REGISTER_MEASUREMENTS)
   @ApiOperation({
@@ -62,7 +70,11 @@ export class MedicalMeasurementsController {
   create(@Body() dto: CreateMedicalMeasurementDto) {
     return this.medicalMeasurementsService.create(dto);
   }
-
+  /**
+   * Obtiene el listado de medicion medicas que cumplen los filtros indicados.
+   * @param filters Datos de filters validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Get()
   @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({
@@ -77,7 +89,11 @@ export class MedicalMeasurementsController {
   findAll(@Query() filters: FindMedicalMeasurementsDto) {
     return this.medicalMeasurementsService.findAll(filters);
   }
-
+  /**
+   * Obtiene un medicion medica por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   @Get(':id')
   @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({
@@ -94,7 +110,12 @@ export class MedicalMeasurementsController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.medicalMeasurementsService.findOne(id);
   }
-
+  /**
+   * Actualiza un medicion medica existente.
+   * @param id Identificador único del recurso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Patch(':id')
   @Permissions(Permission.REGISTER_MEASUREMENTS)
   @ApiOperation({
@@ -117,7 +138,11 @@ export class MedicalMeasurementsController {
   ) {
     return this.medicalMeasurementsService.update(id, dto);
   }
-
+  /**
+   * Elimina un medicion medica por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   @Delete(':id')
   @Roles(SystemRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)

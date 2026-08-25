@@ -10,9 +10,21 @@ import {
 
 @Injectable()
 export class UpdateFileUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param repository Repositorio utilizado para persistir y consultar repository.
+   */
   constructor(
     @Inject(FILES_REPOSITORY) private readonly repository: IFilesRepository,
   ) {}
+  /**
+   * Actualiza un archivo aplicando las reglas del caso de uso.
+   * @param id Identificador único del recurso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   * @throws {FileNotFoundException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   * @throws {FileRelationNotFoundException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   async execute(id: number, dto: UpdateFileDto): Promise<FileEntity> {
     if (!(await this.repository.findById(id)))
       throw new FileNotFoundException(id);

@@ -32,8 +32,16 @@ import { SystemRole } from '../../../../common/enums/system-role.enum';
 @Controller('patients')
 @UseFilters(PatientExceptionFilter)
 export class PatientsController {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param patientsService Servicio que coordina las operaciones de patients service.
+   */
   constructor(private readonly patientsService: PatientsService) {}
-
+  /**
+   * Crea un paciente con los datos recibidos.
+   * @param createPatientDto Datos de create patient validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Post()
   @Roles(SystemRole.ADMIN)
   @ApiOperation({ summary: 'Crear un paciente' })
@@ -50,7 +58,11 @@ export class PatientsController {
   create(@Body() createPatientDto: CreatePatientDto) {
     return this.patientsService.create(createPatientDto);
   }
-
+  /**
+   * Obtiene el listado de pacientes que cumplen los filtros indicados.
+   * @param query Datos de query validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Get()
   @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({ summary: 'Obtener listado de pacientes' })
@@ -65,7 +77,11 @@ export class PatientsController {
   findAll(@Query() query: QueryPatientDto) {
     return this.patientsService.findAll(query);
   }
-
+  /**
+   * Obtiene un paciente por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   @Get(':id')
   @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({ summary: 'Obtener un paciente por id' })
@@ -78,7 +94,12 @@ export class PatientsController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.patientsService.findOne(id);
   }
-
+  /**
+   * Actualiza un paciente existente.
+   * @param id Identificador único del recurso.
+   * @param updatePatientDto Datos de update patient validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Patch(':id')
   @Roles(SystemRole.ADMIN)
   @ApiOperation({ summary: 'Actualizar un paciente' })
@@ -98,7 +119,11 @@ export class PatientsController {
   ) {
     return this.patientsService.update(id, updatePatientDto);
   }
-
+  /**
+   * Elimina un paciente por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   @Delete(':id')
   @Roles(SystemRole.ADMIN)
   @ApiOperation({ summary: 'Eliminar un paciente' })

@@ -10,11 +10,21 @@ import {
 @Injectable()
 // Aplica la transicion de estado a ENVIADA respetando reglas del dominio.
 export class MarkNotificationAsSentUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param notificationsRepository Repositorio utilizado para persistir y consultar notifications repository.
+   */
   constructor(
     @Inject(NOTIFICATIONS_REPOSITORY)
     private readonly notificationsRepository: INotificationsRepository,
   ) {}
-
+  /**
+   * Ejecuta el caso de uso de notificacion.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   * @throws {NotificationNotFoundException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   * @throws {NotificationInvalidStateException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   async execute(id: number): Promise<NotificationEntity> {
     const notification = await this.notificationsRepository.findById(id);
 

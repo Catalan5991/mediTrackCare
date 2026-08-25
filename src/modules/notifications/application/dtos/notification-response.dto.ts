@@ -1,5 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { NotificationStatus, NotificationType } from '../../../../../generated/prisma/client';
+import {
+  NotificationStatus,
+  NotificationType,
+} from '../../../../../generated/prisma/client';
 
 // Forma publica de una notificacion devuelta por los endpoints HTTP.
 export class NotificationResponseDto {

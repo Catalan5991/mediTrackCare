@@ -8,11 +8,19 @@ import {
 // Lista pacientes con busqueda, paginacion y filtro opcional de estado.
 @Injectable()
 export class FindAllPatientsUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param patientsRepository Repositorio utilizado para persistir y consultar patients repository.
+   */
   constructor(
     @Inject(PATIENTS_REPOSITORY)
     private readonly patientsRepository: PatientsRepository,
   ) {}
-
+  /**
+   * Obtiene informacion de paciente segun los criterios indicados.
+   * @param query Datos de query validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   execute(query: QueryPatientDto) {
     // Define valores por defecto para mantener estable la paginacion de la API.
     return this.patientsRepository.findAll({

@@ -14,11 +14,17 @@ import { MedicalMeasurementMapper } from '../mappers/medical-measurement.mapper'
 
 @Injectable()
 // Implementacion del contrato de repositorio usando Prisma como fuente de datos.
-export class PrismaMedicalMeasurementsRepository
-  implements MedicalMeasurementsRepository
-{
+export class PrismaMedicalMeasurementsRepository implements MedicalMeasurementsRepository {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param prisma Servicio que coordina las operaciones de prisma.
+   */
   constructor(private readonly prisma: PrismaService) {}
-
+  /**
+   * Crea un medicion medica con los datos recibidos.
+   * @param data Datos de data validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async create(
     data: CreateMedicalMeasurementDto,
   ): Promise<MedicalMeasurementEntity> {
@@ -45,7 +51,11 @@ export class PrismaMedicalMeasurementsRepository
       this.handlePrismaError(error);
     }
   }
-
+  /**
+   * Obtiene el listado de medicion medicas que cumplen los filtros indicados.
+   * @param filters Datos de filters validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findAll(
     filters: FindMedicalMeasurementsDto,
   ): Promise<MedicalMeasurementsPaginatedResponse> {
@@ -106,19 +116,12 @@ export class PrismaMedicalMeasurementsRepository
       },
     };
   }
-
-  async findById(id: number): Promise<MedicalMeasurementEntity | null> {
-    const measurement = await this.prisma.medicalMeasurement.findUnique({
-      where: { id },
-    });
-
-    if (!measurement) {
-      return null;
-    }
-
-    return MedicalMeasurementMapper.fromPrisma(measurement);
-  }
-
+  /**
+   * Actualiza un medicion medica existente.
+   * @param id Identificador único del recurso.
+   * @param data Datos de data validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async update(
     id: number,
     data: UpdateMedicalMeasurementDto,
@@ -169,13 +172,13 @@ export class PrismaMedicalMeasurementsRepository
       this.handlePrismaError(error);
     }
   }
-
-  async delete(id: number): Promise<void> {
-    await this.prisma.medicalMeasurement.delete({
-      where: { id },
-    });
-  }
-
+  /**
+   * Ejecuta la operación handle prisma error.
+   * @param error Valor de error requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   * @throws {BadRequestException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   * @throws {Error} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   private handlePrismaError(error: unknown): never {
     // Traduce errores conocidos de Prisma a excepciones HTTP entendibles.
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -193,5 +196,33 @@ export class PrismaMedicalMeasurementsRepository
     }
 
     throw error;
+  }
+
+  /**
+   * Obtiene un medicion medica por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  async findById(id: number): Promise<MedicalMeasurementEntity | null> {
+    const measurement = await this.prisma.medicalMeasurement.findUnique({
+      where: { id },
+    });
+
+    if (!measurement) {
+      return null;
+    }
+
+    return MedicalMeasurementMapper.fromPrisma(measurement);
+  }
+
+  /**
+   * Elimina un medicion medica por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns No retorna ningún valor.
+   */
+  async delete(id: number): Promise<void> {
+    await this.prisma.medicalMeasurement.delete({
+      where: { id },
+    });
   }
 }

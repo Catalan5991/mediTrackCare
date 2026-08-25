@@ -73,7 +73,7 @@ describe('Controlador de pacientes', () => {
     expect(service.update).toHaveBeenCalledWith(1, dto);
     expect(service.update).toHaveBeenCalledTimes(1);
   });
-  
+
   it('debe eliminar un paciente', async () => {
     // El mock representa el borrado lógico mediante `isActive: false`.
     service.remove.mockResolvedValue({ id: 1, isActive: false } as never);

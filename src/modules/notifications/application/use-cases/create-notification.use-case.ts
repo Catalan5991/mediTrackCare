@@ -9,11 +9,19 @@ import {
 @Injectable()
 // Caso de uso responsable de preparar los datos antes de persistir la notificacion.
 export class CreateNotificationUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param notificationsRepository Repositorio utilizado para persistir y consultar notifications repository.
+   */
   constructor(
     @Inject(NOTIFICATIONS_REPOSITORY)
     private readonly notificationsRepository: INotificationsRepository,
   ) {}
-
+  /**
+   * Crea un notificacion aplicando las reglas del caso de uso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async execute(dto: CreateNotificationDto): Promise<NotificationEntity> {
     // Convierte fechas ISO del transporte a Date para el contrato del repositorio.
     return this.notificationsRepository.create({

@@ -83,5 +83,4 @@ describe('Controlador de roles', () => {
     expect(service.remove).toHaveBeenCalledWith(1);
     expect(service.remove).toHaveBeenCalledTimes(1);
   });
-  
 });

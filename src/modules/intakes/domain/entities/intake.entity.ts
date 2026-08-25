@@ -70,7 +70,10 @@ export class IntakeEntity {
     description: 'Fecha de ultima actualizacion del registro.',
   })
   updatedAt!: Date;
-
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param partial Valor de partial requerido por la operacion.
+   */
   constructor(partial: Partial<IntakeEntity>) {
     Object.assign(this, partial);
   }

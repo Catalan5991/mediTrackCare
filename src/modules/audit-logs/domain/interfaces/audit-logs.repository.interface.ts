@@ -33,7 +33,22 @@ export interface PaginatedAuditLogs {
 }
 
 export interface IAuditLogsRepository {
+  /**
+   * Crea un registro de auditoria con los datos recibidos.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   create(data: CreateAuditLogData): Promise<AuditLogEntity>;
+  /**
+   * Obtiene el listado de registro de auditorias que cumplen los filtros indicados.
+   * @param filters Valor de filters requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   findAll(filters: AuditLogFilters): Promise<PaginatedAuditLogs>;
+  /**
+   * Obtiene un registro de auditoria por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   findById(id: number): Promise<AuditLogEntity | null>;
 }

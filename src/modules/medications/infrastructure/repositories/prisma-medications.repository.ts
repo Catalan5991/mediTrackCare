@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma,MedicationForm,MedicationRoute} from '../../../../../generated/prisma/client';
+import {
+  Prisma,
+  MedicationForm,
+  MedicationRoute,
+} from '../../../../../generated/prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { MedicationEntity } from '../../domain/entities/medication.entity';
 import {
@@ -11,8 +15,16 @@ import { MedicationMapper } from '../mappers/medication.mapper';
 // Adaptador Prisma que implementa el puerto de persistencia de medicamentos.
 @Injectable()
 export class PrismaMedicationsRepository implements MedicationsRepository {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param prisma Servicio que coordina las operaciones de prisma.
+   */
   constructor(private readonly prisma: PrismaService) {}
-
+  /**
+   * Obtiene el listado de medicamentos que cumplen los filtros indicados.
+   * @param params Valor de params requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findAll(
     params?: FindAllMedicationsParams,
   ): Promise<MedicationEntity[]> {
@@ -87,7 +99,11 @@ export class PrismaMedicationsRepository implements MedicationsRepository {
 
     return medications.map(MedicationMapper.toDomain);
   }
-
+  /**
+   * Crea un medicamento con los datos recibidos.
+   * @param medication Valor de medication requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async create(medication: MedicationEntity): Promise<MedicationEntity> {
     const createdMedication = await this.prisma.medication.create({
       data: {
@@ -103,19 +119,12 @@ export class PrismaMedicationsRepository implements MedicationsRepository {
 
     return MedicationMapper.toDomain(createdMedication);
   }
-
-  async findById(id: number): Promise<MedicationEntity | null> {
-    const medication = await this.prisma.medication.findUnique({
-      where: { id },
-    });
-
-    if (!medication) {
-      return null;
-    }
-
-    return MedicationMapper.toDomain(medication);
-  }
-
+  /**
+   * Actualiza un medicamento existente.
+   * @param id Identificador único del recurso.
+   * @param medication Valor de medication requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async update(
     id: number,
     medication: Partial<MedicationEntity>,
@@ -136,6 +145,11 @@ export class PrismaMedicationsRepository implements MedicationsRepository {
     return MedicationMapper.toDomain(updatedMedication);
   }
 
+  /**
+   * Elimina el recurso solicitado.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async delete(id: number): Promise<MedicationEntity> {
     // Borrado logico: conserva el registro y lo oculta de vistas activas.
     const deletedMedication = await this.prisma.medication.update({
@@ -146,5 +160,22 @@ export class PrismaMedicationsRepository implements MedicationsRepository {
     });
 
     return MedicationMapper.toDomain(deletedMedication);
+  }
+
+  /**
+   * Obtiene un medicamento por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  async findById(id: number): Promise<MedicationEntity | null> {
+    const medication = await this.prisma.medication.findUnique({
+      where: { id },
+    });
+
+    if (!medication) {
+      return null;
+    }
+
+    return MedicationMapper.toDomain(medication);
   }
 }

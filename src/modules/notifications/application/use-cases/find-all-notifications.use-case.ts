@@ -9,11 +9,19 @@ import {
 @Injectable()
 // Caso de uso de consulta que traduce query params a filtros del dominio.
 export class FindAllNotificationsUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param notificationsRepository Repositorio utilizado para persistir y consultar notifications repository.
+   */
   constructor(
     @Inject(NOTIFICATIONS_REPOSITORY)
     private readonly notificationsRepository: INotificationsRepository,
   ) {}
-
+  /**
+   * Obtiene informacion de notificacion segun los criterios indicados.
+   * @param query Datos de query validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async execute(query: QueryNotificationsDto): Promise<PaginatedNotifications> {
     // Normaliza fechas y paginacion antes de delegar la consulta.
     return this.notificationsRepository.findAll({

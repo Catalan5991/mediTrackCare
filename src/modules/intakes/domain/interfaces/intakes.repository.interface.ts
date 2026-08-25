@@ -18,13 +18,36 @@ export interface IntakesPaginatedResponse {
 
 // Contrato que desacopla los casos de uso de la implementacion con Prisma.
 export interface IntakesRepository {
+  /**
+   * Crea un toma con los datos recibidos.
+   * @param data Datos de data validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   create(data: CreateIntakeDto): Promise<IntakeEntity>;
-
+  /**
+   * Obtiene el listado de tomas que cumplen los filtros indicados.
+   * @param filters Datos de filters validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   findAll(filters: FindIntakesDto): Promise<IntakesPaginatedResponse>;
-
+  /**
+   * Obtiene un toma por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   findById(id: number): Promise<IntakeEntity | null>;
-
+  /**
+   * Actualiza un toma existente.
+   * @param id Identificador único del recurso.
+   * @param data Datos de data validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   update(id: number, data: UpdateIntakeDto): Promise<IntakeEntity>;
 
+  /**
+   * Elimina el recurso solicitado.
+   * @param id Identificador único del recurso.
+   * @returns No retorna ningún valor.
+   */
   delete(id: number): Promise<void>;
 }

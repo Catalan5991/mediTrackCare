@@ -7,6 +7,11 @@ type PrismaUserWithRole = Prisma.UserGetPayload<{
 
 // Convierte registros de Prisma en entidades de dominio para aislar la capa de datos.
 export class AuthUserMapper {
+  /**
+   * Transforma el recurso solicitado.
+   * @param prismaUser Valor de prisma user requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   static toDomain(prismaUser: PrismaUserWithRole): AuthUser {
     return AuthUser.create({
       id: prismaUser.id,

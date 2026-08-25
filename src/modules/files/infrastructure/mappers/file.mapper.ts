@@ -7,6 +7,11 @@ import {
 } from '../../domain/interfaces/files.repository.interface';
 
 export class FileMapper {
+  /**
+   * Ejecuta la operación to entity.
+   * @param file Valor de file requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   static toEntity(file: File): FileEntity {
     return new FileEntity(
       file.id,
@@ -20,7 +25,11 @@ export class FileMapper {
       file.createdAt,
     );
   }
-
+  /**
+   * Ejecuta la operación to prisma create.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   static toPrismaCreate(data: CreateFileData): Prisma.FileUncheckedCreateInput {
     return {
       patientId: data.patientId ?? null,
@@ -32,7 +41,11 @@ export class FileMapper {
       description: data.description ?? null,
     };
   }
-
+  /**
+   * Ejecuta la operación to prisma update.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   static toPrismaUpdate(data: UpdateFileData): Prisma.FileUncheckedUpdateInput {
     const result: Prisma.FileUncheckedUpdateInput = {};
     if (data.patientId !== undefined) result.patientId = data.patientId;
@@ -46,7 +59,11 @@ export class FileMapper {
     if (data.description !== undefined) result.description = data.description;
     return result;
   }
-
+  /**
+   * Transforma el recurso solicitado.
+   * @param file Valor de file requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   static toResponse(file: FileEntity): FileResponseDto {
     return { ...file };
   }

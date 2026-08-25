@@ -8,9 +8,18 @@ import {
 
 @Injectable()
 export class FindFilesUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param repository Repositorio utilizado para persistir y consultar repository.
+   */
   constructor(
     @Inject(FILES_REPOSITORY) private readonly repository: IFilesRepository,
   ) {}
+  /**
+   * Obtiene informacion de archivo segun los criterios indicados.
+   * @param query Datos de query validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   execute(query: QueryFilesDto): Promise<PaginatedFiles> {
     return this.repository.findAll({
       ...query,

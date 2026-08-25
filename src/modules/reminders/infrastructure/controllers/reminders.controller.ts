@@ -40,8 +40,16 @@ import { SystemRole } from '../../../../common/enums/system-role.enum';
 @UseFilters(RemindersExceptionFilter)
 // Expone los endpoints HTTP y delega la logica de aplicacion al servicio.
 export class RemindersController {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param remindersService Servicio que coordina las operaciones de reminders service.
+   */
   constructor(private readonly remindersService: RemindersService) {}
-
+  /**
+   * Crea un recordatorio con los datos recibidos.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Post()
   @Roles(SystemRole.ADMIN, SystemRole.CAREGIVER, SystemRole.PATIENT)
   @ApiOperation({
@@ -60,7 +68,11 @@ export class RemindersController {
   create(@Body() dto: CreateReminderDto) {
     return this.remindersService.create(dto);
   }
-
+  /**
+   * Obtiene el listado de recordatorios que cumplen los filtros indicados.
+   * @param filters Datos de filters validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Get()
   @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({
@@ -75,7 +87,11 @@ export class RemindersController {
   findAll(@Query() filters: FindRemindersDto) {
     return this.remindersService.findAll(filters);
   }
-
+  /**
+   * Obtiene un recordatorio por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   @Get(':id')
   @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({
@@ -92,7 +108,12 @@ export class RemindersController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.remindersService.findOne(id);
   }
-
+  /**
+   * Actualiza un recordatorio existente.
+   * @param id Identificador único del recurso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Patch(':id')
   @Roles(SystemRole.ADMIN, SystemRole.CAREGIVER, SystemRole.PATIENT)
   @ApiOperation({
@@ -115,7 +136,11 @@ export class RemindersController {
   ) {
     return this.remindersService.update(id, dto);
   }
-
+  /**
+   * Elimina un recordatorio por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   @Delete(':id')
   @Roles(SystemRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)

@@ -15,8 +15,16 @@ import { IntakeMapper } from '../mappers/intake.mapper';
 @Injectable()
 // Implementacion del contrato de repositorio usando Prisma como fuente de datos.
 export class PrismaIntakesRepository implements IntakesRepository {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param prisma Servicio que coordina las operaciones de prisma.
+   */
   constructor(private readonly prisma: PrismaService) {}
-
+  /**
+   * Crea un toma con los datos recibidos.
+   * @param data Datos de data validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async create(data: CreateIntakeDto): Promise<IntakeEntity> {
     try {
       const intake = await this.prisma.intake.create({
@@ -37,7 +45,11 @@ export class PrismaIntakesRepository implements IntakesRepository {
       this.handlePrismaError(error);
     }
   }
-
+  /**
+   * Obtiene el listado de tomas que cumplen los filtros indicados.
+   * @param filters Datos de filters validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findAll(filters: FindIntakesDto): Promise<IntakesPaginatedResponse> {
     // Paginacion basada en page/limit para mantener estable la respuesta.
     const page = filters.page ?? 1;
@@ -104,19 +116,12 @@ export class PrismaIntakesRepository implements IntakesRepository {
       },
     };
   }
-
-  async findById(id: number): Promise<IntakeEntity | null> {
-    const intake = await this.prisma.intake.findUnique({
-      where: { id },
-    });
-
-    if (!intake) {
-      return null;
-    }
-
-    return IntakeMapper.fromPrisma(intake);
-  }
-
+  /**
+   * Actualiza un toma existente.
+   * @param id Identificador único del recurso.
+   * @param data Datos de data validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async update(id: number, data: UpdateIntakeDto): Promise<IntakeEntity> {
     try {
       // Evita enviar campos undefined para no sobrescribir datos existentes.
@@ -164,13 +169,13 @@ export class PrismaIntakesRepository implements IntakesRepository {
       this.handlePrismaError(error);
     }
   }
-
-  async delete(id: number): Promise<void> {
-    await this.prisma.intake.delete({
-      where: { id },
-    });
-  }
-
+  /**
+   * Ejecuta la operación handle prisma error.
+   * @param error Valor de error requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   * @throws {BadRequestException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   * @throws {Error} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   private handlePrismaError(error: unknown): never {
     // Traduce errores conocidos de Prisma a excepciones HTTP entendibles.
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -188,5 +193,33 @@ export class PrismaIntakesRepository implements IntakesRepository {
     }
 
     throw error;
+  }
+
+  /**
+   * Obtiene un toma por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  async findById(id: number): Promise<IntakeEntity | null> {
+    const intake = await this.prisma.intake.findUnique({
+      where: { id },
+    });
+
+    if (!intake) {
+      return null;
+    }
+
+    return IntakeMapper.fromPrisma(intake);
+  }
+
+  /**
+   * Elimina un toma por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns No retorna ningún valor.
+   */
+  async delete(id: number): Promise<void> {
+    await this.prisma.intake.delete({
+      where: { id },
+    });
   }
 }

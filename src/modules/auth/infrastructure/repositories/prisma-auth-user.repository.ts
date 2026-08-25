@@ -12,8 +12,16 @@ const DEFAULT_ROLE_NAME = 'PATIENT';
 @Injectable()
 // Adaptador Prisma del puerto AuthUserRepository.
 export class PrismaAuthUserRepository implements AuthUserRepository {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param prisma Servicio que coordina las operaciones de prisma.
+   */
   constructor(private readonly prisma: PrismaService) {}
-
+  /**
+   * Crea un usuario autenticado con los datos recibidos.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async create(data: CreateAuthUserData): Promise<AuthUser> {
     const user = await this.prisma.user.create({
       data: {
@@ -34,10 +42,14 @@ export class PrismaAuthUserRepository implements AuthUserRepository {
 
     return AuthUserMapper.toDomain(user);
   }
-
-  async findById(id: number): Promise<AuthUser | null> {
+  /**
+   * Obtiene by email.
+   * @param email Valor de email requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  async findByEmail(email: string): Promise<AuthUser | null> {
     const user = await this.prisma.user.findUnique({
-      where: { id },
+      where: { email },
       include: {
         role: true,
       },
@@ -46,9 +58,14 @@ export class PrismaAuthUserRepository implements AuthUserRepository {
     return user ? AuthUserMapper.toDomain(user) : null;
   }
 
-  async findByEmail(email: string): Promise<AuthUser | null> {
+  /**
+   * Obtiene un usuario autenticado por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  async findById(id: number): Promise<AuthUser | null> {
     const user = await this.prisma.user.findUnique({
-      where: { email },
+      where: { id },
       include: {
         role: true,
       },

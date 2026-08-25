@@ -10,6 +10,12 @@ import { FileRelationNotFoundException } from '../../domain/exceptions/file-rela
 
 @Catch(FileNotFoundException, FileRelationNotFoundException)
 export class FileExceptionFilter implements ExceptionFilter {
+  /**
+   * Intercepta y traduce el recurso solicitado.
+   * @param exception Excepción que debe procesarse.
+   * @param host Contexto de argumentos de la excepción.
+   * @returns No retorna ningún valor.
+   */
   catch(exception: HttpException, host: ArgumentsHost): void {
     const context = host.switchToHttp();
     const response = context.getResponse<Response>();

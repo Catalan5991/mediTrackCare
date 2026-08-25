@@ -11,11 +11,22 @@ import {
 // registro exista y que un cambio de userId o patientId no produzca duplicados.
 @Injectable()
 export class UpdateCaregiverUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param caregiversRepository Repositorio utilizado para persistir y consultar caregivers repository.
+   */
   constructor(
     @Inject(CAREGIVERS_REPOSITORY)
     private readonly caregiversRepository: CaregiversRepository,
   ) {}
-
+  /**
+   * Actualiza un cuidador aplicando las reglas del caso de uso.
+   * @param id Identificador único del recurso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   * @throws {CaregiverNotFoundException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   * @throws {CaregiverAlreadyExistsException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   async execute(id: number, dto: UpdateCaregiverDto) {
     // Se consulta primero para diferenciar "no existe" de errores de escritura.
     const caregiver = await this.caregiversRepository.findById(id);

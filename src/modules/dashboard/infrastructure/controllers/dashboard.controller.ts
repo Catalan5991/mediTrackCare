@@ -40,11 +40,20 @@ import { DashboardExceptionFilter } from '../filters/dashboard-exception.filter'
 // Controller HTTP del modulo Dashboard. Solo valida entrada, toma el usuario
 // autenticado cuando aplica y delega la obtencion de metricas a casos de uso.
 export class DashboardController {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param getAdminDashboardUseCase Caso de uso encargado de get admin dashboard use case.
+   * @param getPatientDashboardUseCase Caso de uso encargado de get patient dashboard use case.
+   */
   constructor(
     private readonly getAdminDashboardUseCase: GetAdminDashboardUseCase,
     private readonly getPatientDashboardUseCase: GetPatientDashboardUseCase,
   ) {}
-
+  /**
+   * Obtiene admin dashboard.
+   * @param filters Datos de filters validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Get('admin')
   @Permissions(Permission.VIEW_GENERAL_DASHBOARD)
   @ApiOperation({
@@ -83,7 +92,12 @@ export class DashboardController {
       .execute(filters)
       .then(DashboardMapper.toAdminResponse);
   }
-
+  /**
+   * Obtiene patient dashboard.
+   * @param user Valor de user requerido por la operacion.
+   * @param filters Datos de filters validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Get('patient/me')
   @Roles(SystemRole.PATIENT)
   @ApiOperation({

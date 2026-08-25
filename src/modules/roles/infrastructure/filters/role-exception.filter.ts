@@ -13,6 +13,12 @@ import { RoleNotFoundException } from '../../domain/exceptions/role-not-found.ex
 // status codes.
 @Catch(RoleNotFoundException, RoleAlreadyExistsException)
 export class RoleExceptionFilter implements ExceptionFilter {
+  /**
+   * Intercepta y traduce el recurso solicitado.
+   * @param exception Excepción que debe procesarse.
+   * @param host Contexto de argumentos de la excepción.
+   * @returns Resultado producido por la operación.
+   */
   catch(exception: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();

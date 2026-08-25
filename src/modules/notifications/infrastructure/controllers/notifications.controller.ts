@@ -41,21 +41,17 @@ import { SystemRole } from '../../../../common/enums/system-role.enum';
 @UseFilters(NotificationExceptionFilter)
 // Expone endpoints HTTP y transforma entidades del dominio a DTOs de respuesta.
 export class NotificationsController {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param notificationsService Servicio que coordina las operaciones de notifications service.
+   */
   constructor(private readonly notificationsService: NotificationsService) {}
-
-  @Post()
-  // Solo administracion puede emitir notificaciones para otros usuarios.
-  @Roles(SystemRole.ADMIN)
-  @ApiOperation({ summary: 'Crear una nueva notificación.' })
-  @ApiCreatedResponse({ type: NotificationResponseDto })
-  async create(
-    @Body() dto: CreateNotificationDto,
-  ): Promise<NotificationResponseDto> {
-    const notification = await this.notificationsService.create(dto);
-    // El mapper evita exponer directamente la entidad interna.
-    return NotificationMapper.toResponse(notification);
-  }
-
+  /**
+   * Obtiene el listado de notificacions que cumplen los filtros indicados.
+   * @param query Datos de query validados para la operacion.
+   * @param user Valor de user requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   @Get()
   @ApiOperation({ summary: 'Obtener notificaciones con filtros y paginación.' })
   @ApiOkResponse({ type: PaginatedNotificationsResponseDto })
@@ -77,7 +73,12 @@ export class NotificationsController {
       totalPages: result.totalPages,
     };
   }
-
+  /**
+   * Obtiene un notificacion por su identificador.
+   * @param id Identificador único del recurso.
+   * @param user Valor de user requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   @Get(':id')
   @ApiOperation({ summary: 'Obtener una notificación por ID.' })
   @ApiParam({ name: 'id', example: 1 })
@@ -92,22 +93,12 @@ export class NotificationsController {
     this.assertOwnerOrAdmin(notification.userId, user);
     return NotificationMapper.toResponse(notification);
   }
-
-  @Patch(':id')
-  // La edicion general puede cambiar destinatario, contenido y estado, por lo
-  // que se reserva al administrador.
-  @Roles(SystemRole.ADMIN)
-  @ApiOperation({ summary: 'Actualizar una notificación.' })
-  @ApiParam({ name: 'id', example: 1 })
-  @ApiOkResponse({ type: NotificationResponseDto })
-  async update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateNotificationDto,
-  ): Promise<NotificationResponseDto> {
-    const notification = await this.notificationsService.update(id, dto);
-    return NotificationMapper.toResponse(notification);
-  }
-
+  /**
+   * Ejecuta la operación mark as read.
+   * @param id Identificador único del recurso.
+   * @param user Valor de user requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   @Patch(':id/read')
   @ApiOperation({ summary: 'Marcar una notificación como leída.' })
   @ApiParam({ name: 'id', example: 1 })
@@ -124,7 +115,11 @@ export class NotificationsController {
     const notification = await this.notificationsService.markAsRead(id);
     return NotificationMapper.toResponse(notification);
   }
-
+  /**
+   * Ejecuta la operación mark as sent.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   @Patch(':id/sent')
   // El envio es una accion del sistema/administrador, no del destinatario.
   @Roles(SystemRole.ADMIN)
@@ -138,7 +133,67 @@ export class NotificationsController {
     const notification = await this.notificationsService.markAsSent(id);
     return NotificationMapper.toResponse(notification);
   }
+  /**
+   * Ejecuta la operación assert owner or admin.
+   * @param userId Valor de user id requerido por la operacion.
+   * @param user Valor de user requerido por la operacion.
+   * @returns No retorna ningún valor.
+   * @throws {ForbiddenException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
+  private assertOwnerOrAdmin(userId: number, user: AuthenticatedUser): void {
+    // ADMIN puede operar sobre cualquier destinatario. Los demas roles solo
+    // pueden acceder cuando el userId persistido coincide con el JWT validado.
+    if (user.role.toUpperCase() !== SystemRole.ADMIN && user.id !== userId) {
+      throw new ForbiddenException(
+        'No tienes permisos para acceder a esta notificación.',
+      );
+    }
+  }
 
+  /**
+   * Crea un notificacion con los datos recibidos.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  @Post()
+  // Solo administracion puede emitir notificaciones para otros usuarios.
+  @Roles(SystemRole.ADMIN)
+  @ApiOperation({ summary: 'Crear una nueva notificación.' })
+  @ApiCreatedResponse({ type: NotificationResponseDto })
+  async create(
+    @Body() dto: CreateNotificationDto,
+  ): Promise<NotificationResponseDto> {
+    const notification = await this.notificationsService.create(dto);
+    // El mapper evita exponer directamente la entidad interna.
+    return NotificationMapper.toResponse(notification);
+  }
+
+  /**
+   * Actualiza un notificacion existente.
+   * @param id Identificador único del recurso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  @Patch(':id')
+  // La edicion general puede cambiar destinatario, contenido y estado, por lo
+  // que se reserva al administrador.
+  @Roles(SystemRole.ADMIN)
+  @ApiOperation({ summary: 'Actualizar una notificación.' })
+  @ApiParam({ name: 'id', example: 1 })
+  @ApiOkResponse({ type: NotificationResponseDto })
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateNotificationDto,
+  ): Promise<NotificationResponseDto> {
+    const notification = await this.notificationsService.update(id, dto);
+    return NotificationMapper.toResponse(notification);
+  }
+
+  /**
+   * Elimina un notificacion por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns No retorna ningún valor.
+   */
   @Delete(':id')
   // Restringe la eliminacion para conservar el historial del destinatario.
   @Roles(SystemRole.ADMIN)
@@ -150,15 +205,5 @@ export class NotificationsController {
   })
   async delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.notificationsService.delete(id);
-  }
-
-  private assertOwnerOrAdmin(userId: number, user: AuthenticatedUser): void {
-    // ADMIN puede operar sobre cualquier destinatario. Los demas roles solo
-    // pueden acceder cuando el userId persistido coincide con el JWT validado.
-    if (user.role.toUpperCase() !== SystemRole.ADMIN && user.id !== userId) {
-      throw new ForbiddenException(
-        'No tienes permisos para acceder a esta notificación.',
-      );
-    }
   }
 }

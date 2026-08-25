@@ -10,11 +10,20 @@ import {
 @Injectable()
 // Caso de uso de lectura con validacion de reglas antes de consultar datos.
 export class FindIntakesUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param repository Repositorio utilizado para persistir y consultar repository.
+   */
   constructor(
     @Inject(INTAKES_REPOSITORY)
     private readonly repository: IntakesRepository,
   ) {}
-
+  /**
+   * Obtiene informacion de toma segun los criterios indicados.
+   * @param filters Datos de filters validados para la operacion.
+   * @returns Resultado producido por la operación.
+   * @throws {InvalidIntakeDateRangeException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   execute(filters: FindIntakesDto): Promise<IntakesPaginatedResponse> {
     // Evita consultas ambiguas cuando el rango de fechas llega invertido.
     if (filters.dateFrom && filters.dateTo) {

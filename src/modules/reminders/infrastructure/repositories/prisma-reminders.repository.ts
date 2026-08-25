@@ -15,8 +15,16 @@ import { ReminderMapper } from '../mappers/reminder.mapper';
 @Injectable()
 // Implementacion del contrato de repositorio usando Prisma como fuente de datos.
 export class PrismaRemindersRepository implements RemindersRepository {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param prisma Servicio que coordina las operaciones de prisma.
+   */
   constructor(private readonly prisma: PrismaService) {}
-
+  /**
+   * Crea un recordatorio con los datos recibidos.
+   * @param data Datos de data validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async create(data: CreateReminderDto): Promise<ReminderEntity> {
     try {
       const reminder = await this.prisma.reminder.create({
@@ -34,7 +42,11 @@ export class PrismaRemindersRepository implements RemindersRepository {
       this.handlePrismaError(error);
     }
   }
-
+  /**
+   * Obtiene el listado de recordatorios que cumplen los filtros indicados.
+   * @param filters Datos de filters validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findAll(
     filters: FindRemindersDto,
   ): Promise<RemindersPaginatedResponse> {
@@ -87,23 +99,13 @@ export class PrismaRemindersRepository implements RemindersRepository {
       },
     };
   }
-
-  async findById(id: number): Promise<ReminderEntity | null> {
-    const reminder = await this.prisma.reminder.findUnique({
-      where: { id },
-    });
-
-    if (!reminder) {
-      return null;
-    }
-
-    return ReminderMapper.fromPrisma(reminder);
-  }
-
-  async update(
-    id: number,
-    data: UpdateReminderDto,
-  ): Promise<ReminderEntity> {
+  /**
+   * Actualiza un recordatorio existente.
+   * @param id Identificador único del recurso.
+   * @param data Datos de data validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  async update(id: number, data: UpdateReminderDto): Promise<ReminderEntity> {
     try {
       // Evita enviar campos undefined para no sobrescribir datos existentes.
       const updateData: Prisma.ReminderUncheckedUpdateInput = {};
@@ -138,13 +140,13 @@ export class PrismaRemindersRepository implements RemindersRepository {
       this.handlePrismaError(error);
     }
   }
-
-  async delete(id: number): Promise<void> {
-    await this.prisma.reminder.delete({
-      where: { id },
-    });
-  }
-
+  /**
+   * Ejecuta la operación handle prisma error.
+   * @param error Valor de error requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   * @throws {BadRequestException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   * @throws {Error} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   private handlePrismaError(error: unknown): never {
     // Traduce errores conocidos de Prisma a excepciones HTTP entendibles.
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -162,5 +164,33 @@ export class PrismaRemindersRepository implements RemindersRepository {
     }
 
     throw error;
+  }
+
+  /**
+   * Obtiene un recordatorio por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  async findById(id: number): Promise<ReminderEntity | null> {
+    const reminder = await this.prisma.reminder.findUnique({
+      where: { id },
+    });
+
+    if (!reminder) {
+      return null;
+    }
+
+    return ReminderMapper.fromPrisma(reminder);
+  }
+
+  /**
+   * Elimina un recordatorio por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns No retorna ningún valor.
+   */
+  async delete(id: number): Promise<void> {
+    await this.prisma.reminder.delete({
+      where: { id },
+    });
   }
 }

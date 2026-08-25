@@ -84,7 +84,7 @@ describe('Controlador de usuarios', () => {
     expect(update.execute).toHaveBeenCalledWith(1, dto);
     expect(update.execute).toHaveBeenCalledTimes(1);
   });
-  
+
   it('debe eliminar un usuario', async () => {
     // La eliminación lógica simulada se retorna sin modificar su estado público.
     remove.execute.mockResolvedValue({ id: 1, isActive: false });

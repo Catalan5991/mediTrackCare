@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { NotificationStatus, Prisma } from '../../../../../generated/prisma/client';
+import {
+  NotificationStatus,
+  Prisma,
+} from '../../../../../generated/prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { NotificationMapper } from '../mappers/notification.mapper';
 import { NotificationEntity } from '../../domain/entities/notification.entity';
@@ -14,8 +17,16 @@ import {
 @Injectable()
 // Implementacion del repositorio de notificaciones usando Prisma.
 export class PrismaNotificationsRepository implements INotificationsRepository {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param prisma Servicio que coordina las operaciones de prisma.
+   */
   constructor(private readonly prisma: PrismaService) {}
-
+  /**
+   * Crea un notificacion con los datos recibidos.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async create(data: CreateNotificationData): Promise<NotificationEntity> {
     // El mapper mantiene fuera de Prisma los detalles del contrato de dominio.
     const notification = await this.prisma.notification.create({
@@ -24,7 +35,11 @@ export class PrismaNotificationsRepository implements INotificationsRepository {
 
     return NotificationMapper.toEntity(notification);
   }
-
+  /**
+   * Obtiene el listado de notificacions que cumplen los filtros indicados.
+   * @param filters Valor de filters requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findAll(filters: NotificationFilters): Promise<PaginatedNotifications> {
     // Limita la paginacion para evitar consultas demasiado grandes.
     const page = Math.max(Number(filters.page ?? 1), 1);
@@ -102,19 +117,12 @@ export class PrismaNotificationsRepository implements INotificationsRepository {
       totalPages: Math.ceil(total / limit),
     };
   }
-
-  async findById(id: number): Promise<NotificationEntity | null> {
-    const notification = await this.prisma.notification.findUnique({
-      where: { id },
-    });
-
-    if (!notification) {
-      return null;
-    }
-
-    return NotificationMapper.toEntity(notification);
-  }
-
+  /**
+   * Actualiza un notificacion existente.
+   * @param id Identificador único del recurso.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async update(
     id: number,
     data: UpdateNotificationData,
@@ -126,13 +134,12 @@ export class PrismaNotificationsRepository implements INotificationsRepository {
 
     return NotificationMapper.toEntity(notification);
   }
-
-  async delete(id: number): Promise<void> {
-    await this.prisma.notification.delete({
-      where: { id },
-    });
-  }
-
+  /**
+   * Ejecuta la operación mark as read.
+   * @param id Identificador único del recurso.
+   * @param readAt Valor de read at requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async markAsRead(id: number, readAt: Date): Promise<NotificationEntity> {
     // Actualiza estado y marca temporal de lectura en una sola operacion.
     const notification = await this.prisma.notification.update({
@@ -145,7 +152,12 @@ export class PrismaNotificationsRepository implements INotificationsRepository {
 
     return NotificationMapper.toEntity(notification);
   }
-
+  /**
+   * Ejecuta la operación mark as sent.
+   * @param id Identificador único del recurso.
+   * @param sentAt Valor de sent at requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async markAsSent(id: number, sentAt: Date): Promise<NotificationEntity> {
     // Actualiza estado y marca temporal de envio en una sola operacion.
     const notification = await this.prisma.notification.update({
@@ -157,5 +169,33 @@ export class PrismaNotificationsRepository implements INotificationsRepository {
     });
 
     return NotificationMapper.toEntity(notification);
+  }
+
+  /**
+   * Obtiene un notificacion por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  async findById(id: number): Promise<NotificationEntity | null> {
+    const notification = await this.prisma.notification.findUnique({
+      where: { id },
+    });
+
+    if (!notification) {
+      return null;
+    }
+
+    return NotificationMapper.toEntity(notification);
+  }
+
+  /**
+   * Elimina un notificacion por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns No retorna ningún valor.
+   */
+  async delete(id: number): Promise<void> {
+    await this.prisma.notification.delete({
+      where: { id },
+    });
   }
 }

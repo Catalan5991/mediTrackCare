@@ -49,13 +49,45 @@ export interface PaginatedCaregivers {
 // Puerto de persistencia usado por los casos de uso del modulo Caregivers.
 // Define las operaciones que necesita la aplicacion sin exponer modelos Prisma.
 export interface CaregiversRepository {
+  /**
+   * Crea un cuidador con los datos recibidos.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   create(data: CreateCaregiverData): Promise<Caregiver>;
+  /**
+   * Obtiene el listado de cuidadors que cumplen los filtros indicados.
+   * @param params Valor de params requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   findAll(params: FindCaregiversParams): Promise<PaginatedCaregivers>;
+  /**
+   * Obtiene un cuidador por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   findById(id: number): Promise<Caregiver | null>;
+  /**
+   * Obtiene by user and patient.
+   * @param userId Valor de user id requerido por la operacion.
+   * @param patientId Valor de patient id requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   findByUserAndPatient(
     userId: number,
     patientId: number,
   ): Promise<Caregiver | null>;
+  /**
+   * Actualiza un cuidador existente.
+   * @param id Identificador único del recurso.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   update(id: number, data: UpdateCaregiverData): Promise<Caregiver>;
+  /**
+   * Ejecuta la operación soft delete.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   softDelete(id: number): Promise<Caregiver>;
 }

@@ -13,8 +13,16 @@ import { CaregiverMapper } from '../mappers/caregiver.mapper';
 
 @Injectable()
 export class PrismaCaregiversRepository implements CaregiversRepository {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param prisma Servicio que coordina las operaciones de prisma.
+   */
   constructor(private readonly prisma: PrismaService) {}
-
+  /**
+   * Crea un cuidador con los datos recibidos.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async create(data: CreateCaregiverData): Promise<Caregiver> {
     // Persiste el vinculo usando los nombres del modelo Prisma. La conversion
     // a entidad de dominio se hace al final para no filtrar tipos del ORM.
@@ -29,7 +37,11 @@ export class PrismaCaregiversRepository implements CaregiversRepository {
 
     return CaregiverMapper.toDomain(caregiver);
   }
-
+  /**
+   * Obtiene el listado de cuidadors que cumplen los filtros indicados.
+   * @param params Valor de params requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findAll(params: FindCaregiversParams): Promise<PaginatedCaregivers> {
     // Normaliza paginacion aqui para que todos los consumidores del repositorio
     // obtengan el mismo comportamiento, aunque omitan page o limit.
@@ -84,18 +96,12 @@ export class PrismaCaregiversRepository implements CaregiversRepository {
       lastPage: Math.ceil(total / limit),
     };
   }
-
-  async findById(id: number): Promise<Caregiver | null> {
-    // findUnique aprovecha la llave primaria id definida en el modelo Caregiver.
-    const caregiver = await this.prisma.caregiver.findUnique({
-      where: { id },
-    });
-
-    if (!caregiver) return null;
-
-    return CaregiverMapper.toDomain(caregiver);
-  }
-
+  /**
+   * Obtiene by user and patient.
+   * @param userId Valor de user id requerido por la operacion.
+   * @param patientId Valor de patient id requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findByUserAndPatient(
     userId: number,
     patientId: number,
@@ -115,7 +121,12 @@ export class PrismaCaregiversRepository implements CaregiversRepository {
 
     return CaregiverMapper.toDomain(caregiver);
   }
-
+  /**
+   * Actualiza un cuidador existente.
+   * @param id Identificador único del recurso.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async update(id: number, data: UpdateCaregiverData): Promise<Caregiver> {
     // Prisma ignora valores undefined, por eso este metodo sirve para PATCH
     // sin tener que construir manualmente un objeto solo con campos presentes.
@@ -132,7 +143,11 @@ export class PrismaCaregiversRepository implements CaregiversRepository {
 
     return CaregiverMapper.toDomain(caregiver);
   }
-
+  /**
+   * Ejecuta la operación soft delete.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async softDelete(id: number): Promise<Caregiver> {
     // Borrado logico: conserva el registro y solo lo desactiva para mantener
     // trazabilidad de quien estuvo asociado al cuidado del paciente.
@@ -142,6 +157,22 @@ export class PrismaCaregiversRepository implements CaregiversRepository {
         isActive: false,
       },
     });
+
+    return CaregiverMapper.toDomain(caregiver);
+  }
+
+  /**
+   * Obtiene un cuidador por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  async findById(id: number): Promise<Caregiver | null> {
+    // findUnique aprovecha la llave primaria id definida en el modelo Caregiver.
+    const caregiver = await this.prisma.caregiver.findUnique({
+      where: { id },
+    });
+
+    if (!caregiver) return null;
 
     return CaregiverMapper.toDomain(caregiver);
   }

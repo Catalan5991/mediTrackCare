@@ -14,6 +14,11 @@ type JwtPayload = {
 @Injectable()
 // Estrategia Passport que valida el bearer token y carga el usuario vigente.
 export class JwtStrategy extends PassportStrategy(Strategy) {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param configService Servicio que coordina las operaciones de config service.
+   * @param authUserRepository Repositorio utilizado para persistir y consultar auth user repository.
+   */
   constructor(
     private readonly configService: ConfigService,
 
@@ -27,6 +32,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
+  /**
+   * Valida el recurso solicitado.
+   * @param payload Datos incluidos en la operación.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   * @throws {Error} Cuando los datos o el estado de la operación incumplen una regla de negocio.
+   */
   async validate(payload: JwtPayload) {
     const user = await this.authUserRepository.findById(payload.sub);
 

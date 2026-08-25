@@ -12,6 +12,12 @@ import { InvalidCredentialsException } from '../../domain/exceptions/invalid-cre
 // Orquesta el inicio de sesion sin acoplarse a bcrypt, JWT ni Prisma directamente.
 @Injectable()
 export class LoginUserUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param authUserRepository Repositorio utilizado para persistir y consultar auth user repository.
+   * @param passwordHasher Valor de password hasher requerido por la operacion.
+   * @param tokenService Servicio que coordina las operaciones de token service.
+   */
   constructor(
     @Inject(AUTH_USER_REPOSITORY)
     private readonly authUserRepository: AuthUserRepository,
@@ -22,7 +28,12 @@ export class LoginUserUseCase {
     @Inject(TOKEN_SERVICE)
     private readonly tokenService: TokenService,
   ) {}
-
+  /**
+   * Autentica las credenciales y genera la sesion del usuario.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   * @throws {InvalidCredentialsException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   async execute(dto: LoginDto): Promise<AuthResponseDto> {
     const email = dto.email.trim().toLowerCase();
 

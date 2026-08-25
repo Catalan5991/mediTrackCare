@@ -33,11 +33,72 @@ type RequestUser = {
 // sobre el JWT global. Esto evita romper endpoints existentes mientras se
 // migra gradualmente cada modulo a permisos explicitos.
 export class RolesGuard implements CanActivate {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param reflector Valor de reflector requerido por la operacion.
+   * @param configService Servicio que coordina las operaciones de config service.
+   */
   constructor(
     private readonly reflector: Reflector,
     private readonly configService: ConfigService,
   ) {}
+  /**
+   * Ejecuta la operación normalize role.
+   * @param role Valor de role requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
+  private normalizeRole(role?: string): SystemRole | null {
+    // Acepta nombres de rol desde base de datos sin depender de mayusculas.
+    const normalizedRole = role?.toUpperCase();
 
+    if (
+      normalizedRole &&
+      Object.values(SystemRole).includes(normalizedRole as SystemRole)
+    ) {
+      return normalizedRole as SystemRole;
+    }
+
+    return null;
+  }
+  /**
+   * Ejecuta la operación resolve permissions.
+   * @param role Valor de role requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
+  private resolvePermissions(role: SystemRole): Permission[] {
+    // Combina permisos base con permisos opcionales habilitados por ambiente.
+    // Set elimina duplicados si en el futuro un permiso aparece en ambas listas.
+    const basePermissions = ROLE_PERMISSIONS[role];
+    const configurablePermissions = CONFIGURABLE_ROLE_PERMISSIONS[role];
+    const enabledConfigurablePermissions = Object.entries(
+      configurablePermissions,
+    )
+      .filter(([, envKey]) => this.isConfigEnabled(envKey))
+      .map(([permission]) => permission as Permission);
+
+    return [
+      ...new Set([...basePermissions, ...enabledConfigurablePermissions]),
+    ];
+  }
+  /**
+   * Ejecuta la operación is config enabled.
+   * @param envKey Valor de env key requerido por la operacion.
+   * @returns Indica si la validación o condición se cumple.
+   */
+  private isConfigEnabled(envKey: string): boolean {
+    // Soporta varios valores comunes para facilitar configuracion en .env,
+    // Docker, CI/CD o paneles de hosting.
+    const value = this.configService.get<string>(envKey);
+
+    return ['true', '1', 'yes', 'on'].includes(value?.toLowerCase() ?? '');
+  }
+
+  /**
+   * Determina si puede activarse el recurso solicitado.
+   * @param context Contexto de ejecución proporcionado por NestJS.
+   * @returns Indica si la validación o condición se cumple.
+   * @throws {ForbiddenException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   canActivate(context: ExecutionContext): boolean {
     // Metadata definida a nivel de clase o metodo. El metodo tiene prioridad
     // cuando Nest resuelve getAllAndOverride.
@@ -96,41 +157,5 @@ export class RolesGuard implements CanActivate {
     }
 
     return true;
-  }
-
-  private normalizeRole(role?: string): SystemRole | null {
-    // Acepta nombres de rol desde base de datos sin depender de mayusculas.
-    const normalizedRole = role?.toUpperCase();
-
-    if (
-      normalizedRole &&
-      Object.values(SystemRole).includes(normalizedRole as SystemRole)
-    ) {
-      return normalizedRole as SystemRole;
-    }
-
-    return null;
-  }
-
-  private resolvePermissions(role: SystemRole): Permission[] {
-    // Combina permisos base con permisos opcionales habilitados por ambiente.
-    // Set elimina duplicados si en el futuro un permiso aparece en ambas listas.
-    const basePermissions = ROLE_PERMISSIONS[role];
-    const configurablePermissions = CONFIGURABLE_ROLE_PERMISSIONS[role];
-    const enabledConfigurablePermissions = Object.entries(
-      configurablePermissions,
-    )
-      .filter(([, envKey]) => this.isConfigEnabled(envKey))
-      .map(([permission]) => permission as Permission);
-
-    return [...new Set([...basePermissions, ...enabledConfigurablePermissions])];
-  }
-
-  private isConfigEnabled(envKey: string): boolean {
-    // Soporta varios valores comunes para facilitar configuracion en .env,
-    // Docker, CI/CD o paneles de hosting.
-    const value = this.configService.get<string>(envKey);
-
-    return ['true', '1', 'yes', 'on'].includes(value?.toLowerCase() ?? '');
   }
 }

@@ -10,11 +10,21 @@ import {
 @Injectable()
 // Valida existencia y prepara los campos de una actualizacion parcial.
 export class UpdateNotificationUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param notificationsRepository Repositorio utilizado para persistir y consultar notifications repository.
+   */
   constructor(
     @Inject(NOTIFICATIONS_REPOSITORY)
     private readonly notificationsRepository: INotificationsRepository,
   ) {}
-
+  /**
+   * Actualiza un notificacion aplicando las reglas del caso de uso.
+   * @param id Identificador único del recurso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   * @throws {NotificationNotFoundException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   async execute(
     id: number,
     dto: UpdateNotificationDto,

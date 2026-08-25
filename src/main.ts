@@ -4,6 +4,10 @@ import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { configureApp } from './configure-app';
 
+/**
+ * Inicializa el recurso solicitado.
+ * @returns Promesa que resuelve con el resultado de la operación.
+ */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   configureApp(app);

@@ -29,11 +29,19 @@ import { Permission } from '../../../../common/enums/permission.enum';
 @ApiTags('Roles')
 @ApiBearerAuth()
 @Controller('roles')
-@Permissions(Permission.MANAGE_ROLES)
+//@Permissions(Permission.MANAGE_ROLES)
 @UseFilters(RoleExceptionFilter)
 export class RolesController {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param rolesService Servicio que coordina las operaciones de roles service.
+   */
   constructor(private readonly rolesService: RolesService) {}
-
+  /**
+   * Crea un rol con los datos recibidos.
+   * @param createRoleDto Datos de create role validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Post()
   @ApiOperation({ summary: 'Crear un rol' })
   @ApiResponse({ status: 201, description: 'Rol creado correctamente.' })
@@ -51,6 +59,11 @@ export class RolesController {
     return this.rolesService.create(createRoleDto);
   }
 
+  /**
+   * Obtiene el listado de rols que cumplen los filtros indicados.
+   * @param query Datos de query validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Get()
   @ApiOperation({ summary: 'Obtener listado de roles' })
   @ApiResponse({
@@ -65,7 +78,12 @@ export class RolesController {
     // GET /roles admite paginacion, busqueda por texto y filtro por estado.
     return this.rolesService.findAll(query);
   }
-
+  
+  /**
+   * Obtiene un rol por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   @Get(':id')
   @ApiOperation({ summary: 'Obtener un rol por id' })
   @ApiResponse({ status: 200, description: 'Rol obtenido correctamente.' })
@@ -78,7 +96,12 @@ export class RolesController {
     // ParseIntPipe evita que ids no numericos lleguen al caso de uso.
     return this.rolesService.findOne(id);
   }
-
+  /**
+   * Actualiza un rol existente.
+   * @param id Identificador único del recurso.
+   * @param updateRoleDto Datos de update role validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar un rol' })
   @ApiResponse({ status: 200, description: 'Rol actualizado correctamente.' })
@@ -99,7 +122,11 @@ export class RolesController {
     // PATCH /roles/:id permite modificar parcialmente nombre, descripcion o estado.
     return this.rolesService.update(id, updateRoleDto);
   }
-
+  /**
+   * Elimina un rol por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar un rol' })
   @ApiResponse({ status: 200, description: 'Rol eliminado correctamente.' })

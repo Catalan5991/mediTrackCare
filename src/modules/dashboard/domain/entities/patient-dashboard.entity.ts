@@ -1,9 +1,26 @@
-import { DashboardPeriodRange, DailyIntakeEvolution } from './admin-dashboard.entity';
+import {
+  DashboardPeriodRange,
+  DailyIntakeEvolution,
+} from './admin-dashboard.entity';
 import { DashboardAlertEntity } from './dashboard-alert.entity';
 
 // Entidad de lectura personalizada para el paciente autenticado. Todos los datos
 // deben pertenecer al paciente resuelto desde el userId del token JWT.
 export class PatientDashboardEntity {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param period Valor de period requerido por la operacion.
+   * @param patient Valor de patient requerido por la operacion.
+   * @param summary Valor de summary requerido por la operacion.
+   * @param adherence Valor de adherence requerido por la operacion.
+   * @param nextIntakes Valor de next intakes requerido por la operacion.
+   * @param currentMedications Valor de current medications requerido por la operacion.
+   * @param recentMeasurements Valor de recent measurements requerido por la operacion.
+   * @param reminders Valor de reminders requerido por la operacion.
+   * @param notifications Valor de notifications requerido por la operacion.
+   * @param charts Valor de charts requerido por la operacion.
+   * @param alerts Valor de alerts requerido por la operacion.
+   */
   constructor(
     public readonly period: DashboardPeriodRange,
     public readonly patient: {
@@ -90,7 +107,11 @@ export class PatientDashboardEntity {
     },
     public readonly alerts: DashboardAlertEntity[],
   ) {}
-
+  /**
+   * Ejecuta la operación with alerts.
+   * @param alerts Valor de alerts requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   withAlerts(alerts: DashboardAlertEntity[]): PatientDashboardEntity {
     // Devuelve una nueva instancia para mantener la entidad inmutable.
     return new PatientDashboardEntity(

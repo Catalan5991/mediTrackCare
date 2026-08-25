@@ -8,11 +8,19 @@ import { QueryDoctorDto } from '../dtos/query-doctor.dto';
 
 @Injectable()
 export class FindAllDoctorsUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param repository Repositorio utilizado para persistir y consultar repository.
+   */
   constructor(
     @Inject(DOCTORS_REPOSITORY)
     private readonly repository: DoctorsRepository,
   ) {}
-
+  /**
+   * Obtiene informacion de medico segun los criterios indicados.
+   * @param query Datos de query validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   execute(query: QueryDoctorDto) {
     return this.repository.findAll({
       ...query,

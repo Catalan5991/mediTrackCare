@@ -12,6 +12,12 @@ import { UserAlreadyExistsException } from '../../domain/exceptions/user-already
 // Registra usuarios normalizando el correo y delegando hashing/token a puertos del dominio.
 @Injectable()
 export class RegisterUserUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param authUserRepository Repositorio utilizado para persistir y consultar auth user repository.
+   * @param passwordHasher Valor de password hasher requerido por la operacion.
+   * @param tokenService Servicio que coordina las operaciones de token service.
+   */
   constructor(
     @Inject(AUTH_USER_REPOSITORY)
     private readonly authUserRepository: AuthUserRepository,
@@ -22,7 +28,12 @@ export class RegisterUserUseCase {
     @Inject(TOKEN_SERVICE)
     private readonly tokenService: TokenService,
   ) {}
-
+  /**
+   * Registra un usuario y protege sus credenciales.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   * @throws {UserAlreadyExistsException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   async execute(dto: RegisterDto): Promise<AuthResponseDto> {
     const email = dto.email.trim().toLowerCase();
 

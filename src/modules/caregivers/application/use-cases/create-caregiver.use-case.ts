@@ -11,11 +11,20 @@ import {
 // base de datos tambien protege esta restriccion con un indice unico.
 @Injectable()
 export class CreateCaregiverUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param caregiversRepository Repositorio utilizado para persistir y consultar caregivers repository.
+   */
   constructor(
     @Inject(CAREGIVERS_REPOSITORY)
     private readonly caregiversRepository: CaregiversRepository,
   ) {}
-
+  /**
+   * Crea un cuidador aplicando las reglas del caso de uso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   * @throws {CaregiverAlreadyExistsException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   async execute(dto: CreateCaregiverDto) {
     // Validacion previa para devolver un error de dominio claro antes de llegar
     // a la restriccion unica de Prisma/PostgreSQL.

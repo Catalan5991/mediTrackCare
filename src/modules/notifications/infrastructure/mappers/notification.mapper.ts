@@ -8,6 +8,11 @@ import { NotificationResponseDto } from '../../application/dtos/notification-res
 
 // Aisla las conversiones entre Prisma, dominio y respuestas HTTP.
 export class NotificationMapper {
+  /**
+   * Ejecuta la operación to entity.
+   * @param notification Valor de notification requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   static toEntity(notification: Notification): NotificationEntity {
     // La entidad recibe valores ya persistidos y concentra reglas de estado.
     return new NotificationEntity(
@@ -24,7 +29,11 @@ export class NotificationMapper {
       notification.createdAt,
     );
   }
-
+  /**
+   * Ejecuta la operación to prisma create.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   static toPrismaCreate(
     data: CreateNotificationData,
   ): Prisma.NotificationUncheckedCreateInput {
@@ -41,7 +50,11 @@ export class NotificationMapper {
       readAt: data.readAt ?? null,
     };
   }
-
+  /**
+   * Ejecuta la operación to prisma update.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   static toPrismaUpdate(
     data: UpdateNotificationData,
   ): Prisma.NotificationUncheckedUpdateInput {
@@ -60,7 +73,11 @@ export class NotificationMapper {
 
     return updateData;
   }
-
+  /**
+   * Transforma el recurso solicitado.
+   * @param entity Valor de entity requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   static toResponse(entity: NotificationEntity): NotificationResponseDto {
     // Define explicitamente el contrato que consume el cliente.
     return {

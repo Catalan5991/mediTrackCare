@@ -10,11 +10,21 @@ import {
 @Injectable()
 // Valida existencia antes de aplicar cambios parciales sobre un recordatorio.
 export class UpdateReminderUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param repository Repositorio utilizado para persistir y consultar repository.
+   */
   constructor(
     @Inject(REMINDERS_REPOSITORY)
     private readonly repository: RemindersRepository,
   ) {}
-
+  /**
+   * Actualiza un recordatorio aplicando las reglas del caso de uso.
+   * @param id Identificador único del recurso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   * @throws {ReminderNotFoundException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   async execute(id: number, dto: UpdateReminderDto): Promise<ReminderEntity> {
     const reminder = await this.repository.findById(id);
 
