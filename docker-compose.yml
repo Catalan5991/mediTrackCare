@@ -1,6 +1,7 @@
 services:
-  db:
+  postgres:
     image: postgres:17-alpine
+    container_name: Postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-meditrackcare}
@@ -14,20 +15,21 @@ services:
       timeout: 5s
       retries: 10
 
-  api:
+  meditrack-api:
+    container_name: meditrack-api
     build:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
     env_file:
       - .env.production
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-meditrack}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-meditrackcare}?schema=public
+      DATABASE_URL: ${DATABASE_URL:?Defina DATABASE_URL  en .env.production}
     ports:
       - "${API_PORT:-3000}:3000"
 
