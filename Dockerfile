@@ -1,6 +1,11 @@
 FROM node:22-bookworm-slim AS build
 
 WORKDIR /app
+
+# Prisma carga prisma.config.ts al generar el cliente, aunque esta operacion no
+# se conecta a PostgreSQL. La URL real se inyecta solamente en el contenedor runtime.
+ENV DATABASE_URL=postgresql://prisma:prisma@localhost:5432/meditrackcare
+
 COPY package*.json ./
 RUN npm ci
 
