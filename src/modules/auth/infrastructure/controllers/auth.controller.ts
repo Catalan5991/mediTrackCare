@@ -30,12 +30,22 @@ import { AuthResponseDto } from '../../application/dtos/auth-response.dto';
 @Controller('auth')
 @UseFilters(AuthExceptionFilter)
 export class AuthController {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param registerUserUseCase Caso de uso encargado de register user use case.
+   * @param loginUserUseCase Caso de uso encargado de login user use case.
+   * @param getProfileUseCase Caso de uso encargado de get profile use case.
+   */
   constructor(
     private readonly registerUserUseCase: RegisterUserUseCase,
     private readonly loginUserUseCase: LoginUserUseCase,
     private readonly getProfileUseCase: GetProfileUseCase,
   ) {}
-
+  /**
+   * Ejecuta la operación register.
+   * @param registerDto Datos de register validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Public()
   @Post('register')
   @ApiOperation({ summary: 'Registrar un nuevo usuario' })
@@ -52,7 +62,11 @@ export class AuthController {
   register(@Body() registerDto: RegisterDto) {
     return this.registerUserUseCase.execute(registerDto);
   }
-
+  /**
+   * Ejecuta la operación login.
+   * @param loginDto Datos de login validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Public()
   @Post('login')
   @ApiOperation({ summary: 'Iniciar sesion' })
@@ -69,7 +83,11 @@ export class AuthController {
   login(@Body() loginDto: LoginDto) {
     return this.loginUserUseCase.execute(loginDto);
   }
-
+  /**
+   * Obtiene profile.
+   * @param user Valor de user requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Obtener el perfil del usuario autenticado' })

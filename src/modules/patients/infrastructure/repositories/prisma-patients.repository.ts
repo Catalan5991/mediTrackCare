@@ -1,19 +1,33 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '../../../../../generated/prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { CreatePatientData,FindPatientsParams,PaginatedPatients,PatientsRepository,UpdatePatientData} from '../../domain/interfaces/patients.repository.interface';
+import {
+  CreatePatientData,
+  FindPatientsParams,
+  PaginatedPatients,
+  PatientsRepository,
+  UpdatePatientData,
+} from '../../domain/interfaces/patients.repository.interface';
 import { Patient } from '../../domain/entities/patient.entity';
 import { PatientMapper } from '../mappers/patient.mapper';
 
 @Injectable()
 export class PrismaPatientsRepository implements PatientsRepository {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param prisma Servicio que coordina las operaciones de prisma.
+   */
   constructor(private readonly prisma: PrismaService) {}
-
+  /**
+   * Crea un paciente con los datos recibidos.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async create(data: CreatePatientData): Promise<Patient> {
     const patient = await this.prisma.patient.create({
       data: {
         userId: data.userId,
-        fullName: data.fullName, 
+        fullName: data.fullName,
         birthDate: new Date(data.birthDate),
         gender: data.gender,
         phone: data.phone,
@@ -25,7 +39,11 @@ export class PrismaPatientsRepository implements PatientsRepository {
 
     return PatientMapper.toDomain(patient);
   }
-
+  /**
+   * Obtiene el listado de pacientes que cumplen los filtros indicados.
+   * @param params Valor de params requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findAll(params: FindPatientsParams): Promise<PaginatedPatients> {
     const page = params.page ?? 1;
     const limit = params.limit ?? 10;
@@ -79,17 +97,11 @@ export class PrismaPatientsRepository implements PatientsRepository {
       lastPage: Math.ceil(total / limit),
     };
   }
-
-  async findById(id: number): Promise<Patient | null> {
-    const patient = await this.prisma.patient.findUnique({
-      where: { id },
-    });
-
-    if (!patient) return null;
-
-    return PatientMapper.toDomain(patient);
-  }
-
+  /**
+   * Obtiene by user id.
+   * @param userId Valor de user id requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findByUserId(userId: number): Promise<Patient | null> {
     const patient = await this.prisma.patient.findUnique({
       where: { userId },
@@ -99,7 +111,12 @@ export class PrismaPatientsRepository implements PatientsRepository {
 
     return PatientMapper.toDomain(patient);
   }
-
+  /**
+   * Actualiza un paciente existente.
+   * @param id Identificador único del recurso.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async update(id: number, data: UpdatePatientData): Promise<Patient> {
     const patient = await this.prisma.patient.update({
       where: { id },
@@ -118,7 +135,11 @@ export class PrismaPatientsRepository implements PatientsRepository {
 
     return PatientMapper.toDomain(patient);
   }
-
+  /**
+   * Ejecuta la operación soft delete.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async softDelete(id: number): Promise<Patient> {
     const patient = await this.prisma.patient.update({
       where: { id },
@@ -126,6 +147,21 @@ export class PrismaPatientsRepository implements PatientsRepository {
         isActive: false,
       },
     });
+
+    return PatientMapper.toDomain(patient);
+  }
+
+  /**
+   * Obtiene un paciente por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  async findById(id: number): Promise<Patient | null> {
+    const patient = await this.prisma.patient.findUnique({
+      where: { id },
+    });
+
+    if (!patient) return null;
 
     return PatientMapper.toDomain(patient);
   }

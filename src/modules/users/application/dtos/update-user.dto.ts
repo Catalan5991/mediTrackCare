@@ -2,11 +2,12 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsEmail,
-  IsIn,
+  IsEnum,
   IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
+import { SystemRole } from '../../../../common/enums/system-role.enum';
 
 // Entrada parcial para modificar solo los campos recibidos.
 export class UpdateUserDto {
@@ -38,13 +39,12 @@ export class UpdateUserDto {
 
   @ApiPropertyOptional({
     example: 'PATIENT',
-    enum: ['PATIENT', 'CAREGIVER', 'DOCTOR', 'ADMIN'],
+    enum: SystemRole,
     description: 'Rol asignado al usuario.',
   })
   @IsOptional()
-  @IsString()
-  @IsIn(['PATIENT', 'CAREGIVER', 'DOCTOR', 'ADMIN'])
-  role?: string;
+  @IsEnum(SystemRole)
+  role?: SystemRole;
 
   @ApiPropertyOptional({
     example: true,

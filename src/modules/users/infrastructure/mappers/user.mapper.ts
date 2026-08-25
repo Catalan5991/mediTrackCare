@@ -7,6 +7,11 @@ type PrismaUserWithRole = Prisma.UserGetPayload<{
 
 // Aisla al dominio de la forma exacta que devuelve Prisma.
 export class UserMapper {
+  /**
+   * Transforma el recurso solicitado.
+   * @param prismaUser Valor de prisma user requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   static toDomain(prismaUser: PrismaUserWithRole): DomainUser {
     return DomainUser.create({
       id: prismaUser.id,

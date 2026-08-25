@@ -28,7 +28,10 @@ export class PrescriptionItemEntity {
   public quantity?: number | null;
   public readonly createdAt?: Date;
   public readonly updatedAt?: Date;
-
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param props Valor de props requerido por la operacion.
+   */
   constructor(props: PrescriptionItemProps) {
     this.id = props.id;
     this.prescriptionId = props.prescriptionId;

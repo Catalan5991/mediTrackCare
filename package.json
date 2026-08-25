@@ -12,12 +12,22 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "start:deploy": "prisma migrate deploy && prisma db seed && node dist/main",
+    "db:seed": "prisma db seed",
+    "db:seed:verify": "tsx scripts/verify-seed.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "cross-env NODE_ENV=test jest --config ./test/config/jest-e2e.local.json --runInBand",
+    "test:e2e:watch": "cross-env NODE_ENV=test jest --config ./test/config/jest-e2e.local.json --watch --runInBand",
+    "test:e2e:cov": "cross-env NODE_ENV=test jest --config ./test/config/jest-e2e.json --coverage --runInBand",
+    "test:e2e:json": "cross-env NODE_ENV=test jest --config ./test/config/jest-e2e.json --runInBand --json --outputFile=./test/results/e2e-results.json",
+    "test:e2e:full": "npm run test:e2e:cov && npm run test:e2e:json && npm run test:e2e:summary",
+    "test:e2e:summary": "tsx test/scripts/jest-json-to-markdown.ts",
+    "test:db:migrate": "tsx test/scripts/prisma-test.ts migrate deploy",
+    "test:db:reset": "tsx test/scripts/prisma-test.ts migrate reset --force --skip-seed"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -27,7 +37,7 @@
     "@nestjs/mapped-types": "^2.1.1",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
-    "@nestjs/swagger": "^11.4.5",
+    "@nestjs/swagger": "^11.4.7",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "bcrypt": "^6.0.0",
@@ -37,7 +47,8 @@
     "passport-jwt": "^4.0.1",
     "pg": "^8.22.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -51,17 +62,21 @@
     "@types/node": "^24.13.2",
     "@types/passport-jwt": "^4.0.1",
     "@types/pg": "^8.20.0",
-    "@types/supertest": "^7.0.0",
+    "@types/supertest": "^7.2.1",
+    "cross-env": "^7.0.3",
     "dotenv": "^17.4.2",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^17.0.0",
     "jest": "^30.0.0",
+    "jest-html-reporters": "^3.1.7",
+    "jest-junit": "^16.0.0",
     "prettier": "^3.4.2",
     "prisma": "^7.8.0",
     "source-map-support": "^0.5.21",
-    "supertest": "^7.0.0",
+    "supertest": "^7.2.2",
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
@@ -80,6 +95,9 @@
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"

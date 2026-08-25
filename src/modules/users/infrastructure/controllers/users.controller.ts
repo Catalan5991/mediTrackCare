@@ -24,13 +24,24 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { UserResponseDto } from '../../application/dtos/user-response.dto';
+import { Permissions } from '../../../../common/decorators/permissions.decorator';
+import { Permission } from '../../../../common/enums/permission.enum';
 
 // Expone endpoints CRUD y mantiene la logica de negocio en los casos de uso.
 @ApiTags('Users')
 @ApiBearerAuth()
 @Controller('users')
+@Permissions(Permission.MANAGE_USERS)
 @UseFilters(UsersExceptionFilter)
 export class UsersController {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param createUserUseCase Caso de uso encargado de create user use case.
+   * @param getUsersUseCase Caso de uso encargado de get users use case.
+   * @param getUserUseCase Caso de uso encargado de get user use case.
+   * @param updateUserUseCase Caso de uso encargado de update user use case.
+   * @param deleteUserUseCase Caso de uso encargado de delete user use case.
+   */
   constructor(
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly getUsersUseCase: GetUsersUseCase,
@@ -38,7 +49,11 @@ export class UsersController {
     private readonly updateUserUseCase: UpdateUserUseCase,
     private readonly deleteUserUseCase: DeleteUserUseCase,
   ) {}
-
+  /**
+   * Crea un usuario con los datos recibidos.
+   * @param createUserDto Datos de create user validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Post()
   @ApiOperation({ summary: 'Crear un usuario' })
   @ApiResponse({
@@ -58,7 +73,10 @@ export class UsersController {
   create(@Body() createUserDto: CreateUserDto) {
     return this.createUserUseCase.execute(createUserDto);
   }
-
+  /**
+   * Obtiene el listado de usuarios que cumplen los filtros indicados.
+   * @returns Resultado producido por la operación.
+   */
   @Get()
   @ApiOperation({ summary: 'Listar usuarios' })
   @ApiResponse({
@@ -73,7 +91,11 @@ export class UsersController {
   findAll() {
     return this.getUsersUseCase.execute();
   }
-
+  /**
+   * Obtiene un usuario por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   @Get(':id')
   @ApiOperation({ summary: 'Obtener un usuario por id' })
   @ApiResponse({
@@ -89,7 +111,12 @@ export class UsersController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.getUserUseCase.execute(id);
   }
-
+  /**
+   * Actualiza un usuario existente.
+   * @param id Identificador único del recurso.
+   * @param updateUserDto Datos de update user validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar un usuario' })
   @ApiResponse({
@@ -109,7 +136,11 @@ export class UsersController {
   ) {
     return this.updateUserUseCase.execute(id, updateUserDto);
   }
-
+  /**
+   * Elimina un usuario por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar un usuario' })
   @ApiResponse({

@@ -1,1 +1,0 @@
-Define reglas, entidades o contratos principales del módulo.

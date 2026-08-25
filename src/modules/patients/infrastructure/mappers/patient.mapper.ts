@@ -3,6 +3,11 @@ import { Patient } from '../../domain/entities/patient.entity';
 
 // Convierte registros de Prisma en entidades para aislar el dominio.
 export class PatientMapper {
+  /**
+   * Transforma el recurso solicitado.
+   * @param patient Valor de patient requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   static toDomain(patient: PrismaPatient): Patient {
     return new Patient(
       patient.id,

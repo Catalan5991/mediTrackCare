@@ -17,8 +17,16 @@ import { PrismaPrescriptionMapper } from '../mappers/prisma-prescription.mapper'
 @Injectable()
 // Persistencia de recetas usando Prisma como fuente de datos.
 export class PrismaPrescriptionsRepository implements PrescriptionRepository {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param prisma Servicio que coordina las operaciones de prisma.
+   */
   constructor(private readonly prisma: PrismaService) {}
-
+  /**
+   * Crea un prescripcion con los datos recibidos.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async create(data: CreatePrescriptionInput): Promise<PrescriptionEntity> {
     // Crea la receta y sus items en una sola operacion anidada.
     const prescription = await this.prisma.prescription.create({
@@ -50,7 +58,11 @@ export class PrismaPrescriptionsRepository implements PrescriptionRepository {
 
     return PrismaPrescriptionMapper.toDomain(prescription);
   }
-
+  /**
+   * Obtiene el listado de prescripcions que cumplen los filtros indicados.
+   * @param filters Valor de filters requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findAll(
     filters: FindPrescriptionsFilters,
   ): Promise<PaginatedPrescriptions> {
@@ -104,22 +116,12 @@ export class PrismaPrescriptionsRepository implements PrescriptionRepository {
       limit,
     };
   }
-
-  async findById(id: number): Promise<PrescriptionEntity | null> {
-    const prescription = await this.prisma.prescription.findUnique({
-      where: { id },
-      include: {
-        items: true,
-      },
-    });
-
-    if (!prescription) {
-      return null;
-    }
-
-    return PrismaPrescriptionMapper.toDomain(prescription);
-  }
-
+  /**
+   * Actualiza un prescripcion existente.
+   * @param id Identificador único del recurso.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async update(
     id: number,
     data: UpdatePrescriptionInput,
@@ -168,9 +170,39 @@ export class PrismaPrescriptionsRepository implements PrescriptionRepository {
     return PrismaPrescriptionMapper.toDomain(prescription);
   }
 
+  /**
+   * Elimina el recurso solicitado.
+   * @param id Identificador único del recurso.
+   * @returns No retorna ningún valor.
+   */
   async delete(id: number): Promise<void> {
-    await this.prisma.prescription.delete({
-      where: { id },
+    await this.prisma.$transaction(async (transaction) => {
+      await transaction.prescriptionItem.deleteMany({
+        where: { prescriptionId: id },
+      });
+      await transaction.prescription.delete({
+        where: { id },
+      });
     });
+  }
+
+  /**
+   * Obtiene un prescripcion por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  async findById(id: number): Promise<PrescriptionEntity | null> {
+    const prescription = await this.prisma.prescription.findUnique({
+      where: { id },
+      include: {
+        items: true,
+      },
+    });
+
+    if (!prescription) {
+      return null;
+    }
+
+    return PrismaPrescriptionMapper.toDomain(prescription);
   }
 }

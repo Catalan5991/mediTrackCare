@@ -29,6 +29,11 @@ type PrismaPrescriptionWithItems = {
 
 // Traduce modelos de Prisma a entidades de dominio para aislar la capa de aplicacion.
 export class PrismaPrescriptionMapper {
+  /**
+   * Transforma el recurso solicitado.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   static toDomain(data: PrismaPrescriptionWithItems): PrescriptionEntity {
     return new PrescriptionEntity({
       id: data.id,
