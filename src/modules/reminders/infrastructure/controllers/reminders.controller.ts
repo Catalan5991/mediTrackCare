@@ -51,7 +51,12 @@ export class RemindersController {
    * @returns Resultado producido por la operación.
    */
   @Post()
-  @Roles(SystemRole.ADMIN, SystemRole.CAREGIVER, SystemRole.PATIENT)
+  @Roles(
+    SystemRole.ADMIN,
+    SystemRole.CAREGIVER,
+    SystemRole.PATIENT,
+    SystemRole.DOCTOR,
+  )
   @ApiOperation({
     summary: 'Registrar un recordatorio',
     description:
@@ -115,7 +120,12 @@ export class RemindersController {
    * @returns Resultado producido por la operación.
    */
   @Patch(':id')
-  @Roles(SystemRole.ADMIN, SystemRole.CAREGIVER, SystemRole.PATIENT)
+  @Roles(
+    SystemRole.ADMIN,
+    SystemRole.CAREGIVER,
+    SystemRole.PATIENT,
+    SystemRole.DOCTOR,
+  )
   @ApiOperation({
     summary: 'Actualizar un recordatorio',
   })

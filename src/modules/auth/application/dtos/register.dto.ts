@@ -1,8 +1,25 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  MinLength,
+  IsOptional,
+  MaxLength,
+  IsTimeZone,
+} from 'class-validator';
 
 // Entrada validada para crear una cuenta local con correo y contrasena.
 export class RegisterDto {
+  @ApiPropertyOptional({ description: 'Telefono de contacto.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  phone?: string;
+  @ApiPropertyOptional({ example: 'America/Mexico_City' })
+  @IsOptional()
+  @IsTimeZone()
+  timeZone?: string;
   @ApiProperty({
     example: 'Maria Lopez',
     description: 'Nombre completo del usuario.',
@@ -25,5 +42,6 @@ export class RegisterDto {
   })
   @IsString()
   @MinLength(6)
+  @MaxLength(72)
   password!: string;
 }

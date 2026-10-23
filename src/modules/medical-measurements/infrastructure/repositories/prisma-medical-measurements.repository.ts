@@ -1,3 +1,4 @@
+import { PatientAccessService } from '../../../../common/authorization/patient-access.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '../../../../../generated/prisma/client';
 
@@ -19,7 +20,10 @@ export class PrismaMedicalMeasurementsRepository implements MedicalMeasurementsR
    * Inicializa una nueva instancia con sus dependencias y estado inicial.
    * @param prisma Servicio que coordina las operaciones de prisma.
    */
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly access: PatientAccessService,
+  ) {}
   /**
    * Crea un medicion medica con los datos recibidos.
    * @param data Datos de data validados para la operacion.
@@ -28,6 +32,8 @@ export class PrismaMedicalMeasurementsRepository implements MedicalMeasurementsR
   async create(
     data: CreateMedicalMeasurementDto,
   ): Promise<MedicalMeasurementEntity> {
+    await this.access.assert(data.patientId, 'track');
+    data.registeredByUserId = this.access.actor().id;
     try {
       // Los numeros decimales se guardan con Prisma.Decimal para evitar perdida.
       const measurement = await this.prisma.medicalMeasurement.create({
@@ -64,7 +70,9 @@ export class PrismaMedicalMeasurementsRepository implements MedicalMeasurementsR
     const limit = filters.limit ?? 10;
     const skip = (page - 1) * limit;
 
-    const where: Prisma.MedicalMeasurementWhereInput = {};
+    const where: Prisma.MedicalMeasurementWhereInput = {
+      patient: await this.access.patientWhere(),
+    };
 
     // Construye el where incrementalmente solo con filtros presentes.
     if (filters.patientId) {
@@ -128,6 +136,10 @@ export class PrismaMedicalMeasurementsRepository implements MedicalMeasurementsR
   ): Promise<MedicalMeasurementEntity> {
     try {
       // Evita enviar campos undefined para no sobrescribir datos existentes.
+      await this.access.resource('medicalMeasurement', id, 'track');
+      if (data.patientId !== undefined)
+        await this.access.assert(data.patientId, 'track');
+      data.registeredByUserId = this.access.actor().id;
       const updateData: Prisma.MedicalMeasurementUncheckedUpdateInput = {};
 
       if (data.patientId !== undefined) {
@@ -204,6 +216,7 @@ export class PrismaMedicalMeasurementsRepository implements MedicalMeasurementsR
    * @returns Promesa que resuelve con el resultado de la operación.
    */
   async findById(id: number): Promise<MedicalMeasurementEntity | null> {
+    await this.access.resource('medicalMeasurement', id);
     const measurement = await this.prisma.medicalMeasurement.findUnique({
       where: { id },
     });
@@ -221,6 +234,7 @@ export class PrismaMedicalMeasurementsRepository implements MedicalMeasurementsR
    * @returns No retorna ningún valor.
    */
   async delete(id: number): Promise<void> {
+    this.access.admin();
     await this.prisma.medicalMeasurement.delete({
       where: { id },
     });

@@ -27,7 +27,8 @@
     "test:e2e:full": "npm run test:e2e:cov && npm run test:e2e:json && npm run test:e2e:summary",
     "test:e2e:summary": "tsx test/scripts/jest-json-to-markdown.ts",
     "test:db:migrate": "tsx test/scripts/prisma-test.ts migrate deploy",
-    "test:db:reset": "tsx test/scripts/prisma-test.ts migrate reset --force --skip-seed"
+    "test:db:reset": "tsx test/scripts/prisma-test.ts migrate reset --force --skip-seed",
+    "start:worker": "node dist/src/medication-worker.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

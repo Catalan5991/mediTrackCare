@@ -1,3 +1,5 @@
+import { GetCaregiverDashboardUseCase } from '../../application/use-cases/get-caregiver-dashboard.use-case';
+import { QueryPatientDto } from '../../../patients/application/dtos/query-patient.dto';
 import {
   Controller,
   Get,
@@ -48,13 +50,25 @@ export class DashboardController {
   constructor(
     private readonly getAdminDashboardUseCase: GetAdminDashboardUseCase,
     private readonly getPatientDashboardUseCase: GetPatientDashboardUseCase,
+    private readonly getCaregiverDashboardUseCase: GetCaregiverDashboardUseCase,
   ) {}
   /**
    * Obtiene admin dashboard.
    * @param filters Datos de filters validados para la operacion.
    * @returns Resultado producido por la operación.
    */
+  @Get('caregiver/me')
+  @Roles(SystemRole.CAREGIVER, SystemRole.ADMIN)
+  @ApiOperation({
+    summary:
+      'Dashboard de pacientes autorizados del cuidador con agenda y resumen diario',
+  })
+  getCaregiverDashboard(@Query() query: QueryPatientDto) {
+    return this.getCaregiverDashboardUseCase.execute(query);
+  }
+
   @Get('admin')
+  @Roles(SystemRole.ADMIN)
   @Permissions(Permission.VIEW_GENERAL_DASHBOARD)
   @ApiOperation({
     summary: 'Obtener dashboard administrativo',

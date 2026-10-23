@@ -1,3 +1,11 @@
+import { PatientLinksController } from './infrastructure/controllers/patient-links.controller';
+import { ManagePatientLinksUseCase } from './application/use-cases/manage-patient-links.use-case';
+import { PATIENT_LINKS_REPOSITORY } from './domain/interfaces/patient-links.repository';
+import { PrismaPatientLinksRepository } from './infrastructure/repositories/prisma-patient-links.repository';
+import { PatientAgendaController } from './infrastructure/controllers/patient-agenda.controller';
+import { GetPatientAgendaUseCase } from './application/use-cases/get-patient-agenda.use-case';
+import { PATIENT_AGENDA_REPOSITORY } from './domain/interfaces/patient-agenda.repository';
+import { PrismaPatientAgendaRepository } from './infrastructure/repositories/prisma-patient-agenda.repository';
 import { Module } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PatientsController } from './infrastructure/controllers/patients.controller';
@@ -12,9 +20,23 @@ import { UpdatePatientUseCase } from './application/use-cases/update-patient.use
 
 // Agrupa el registro de pacientes y enlaza casos de uso con persistencia Prisma.
 @Module({
-  controllers: [PatientsController],
+  controllers: [
+    PatientsController,
+    PatientLinksController,
+    PatientAgendaController,
+  ],
   providers: [
     PrismaService,
+    ManagePatientLinksUseCase,
+    GetPatientAgendaUseCase,
+    {
+      provide: PATIENT_AGENDA_REPOSITORY,
+      useClass: PrismaPatientAgendaRepository,
+    },
+    {
+      provide: PATIENT_LINKS_REPOSITORY,
+      useClass: PrismaPatientLinksRepository,
+    },
     PatientsService,
     CreatePatientUseCase,
     FindAllPatientsUseCase,
@@ -27,6 +49,11 @@ import { UpdatePatientUseCase } from './application/use-cases/update-patient.use
       useClass: PrismaPatientsRepository,
     },
   ],
-  exports: [PatientsService],
+  exports: [
+    PatientsService,
+    ManagePatientLinksUseCase,
+    PATIENTS_REPOSITORY,
+    PATIENT_AGENDA_REPOSITORY,
+  ],
 })
 export class PatientsModule {}

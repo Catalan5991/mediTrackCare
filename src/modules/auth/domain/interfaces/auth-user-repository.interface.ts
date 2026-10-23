@@ -4,6 +4,11 @@ import { AuthUser } from '../entities/auth-user';
 export const AUTH_USER_REPOSITORY = 'AUTH_USER_REPOSITORY';
 
 export type CreateAuthUserData = {
+  profile?: 'PATIENT' | 'CAREGIVER' | 'DOCTOR';
+  phone?: string;
+  timeZone?: string;
+  professionalLicense?: string;
+  specialty?: string;
   name: string;
   email: string;
   password: string;
@@ -11,6 +16,7 @@ export type CreateAuthUserData = {
 
 // Puerto de persistencia que la capa de aplicacion consume sin conocer Prisma.
 export interface AuthUserRepository {
+  profileDetails?(userId: number): Promise<object | null>;
   /**
    * Crea un usuario autenticado con los datos recibidos.
    * @param data Valor de data requerido por la operacion.

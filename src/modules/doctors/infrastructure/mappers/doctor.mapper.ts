@@ -20,6 +20,8 @@ export class DoctorMapper {
       doctor.isActive,
       doctor.createdAt,
       doctor.updatedAt,
+      doctor.verificationStatus,
+      doctor.verifiedAt,
     );
   }
 }
