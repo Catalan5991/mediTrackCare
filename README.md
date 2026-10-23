@@ -51,3 +51,18 @@ La guía completa y la matriz de validación están en [docs/DESPLIEGUE.md](docs
 ```bash
 python scripts/generate_deployment_report.py
 ```
+
+## Recuperacion de contrasena
+
+Configure `RESEND_API_KEY`, `RESEND_FROM` (remitente de un dominio verificado en Resend) y `PASSWORD_RESET_URL` en .env o en el despliegue. La URL apunta a la pagina de recuperacion del frontend.
+
+Ejecute `npx prisma generate` y aplique la migracion con `npx prisma migrate deploy` antes de iniciar el backend.
+
+- `POST /api/auth/forgot-password`: `{"email":"maria@example.com"}`.
+- El frontend lee `token` del enlace y envia `POST /api/auth/reset-password`: `{"token":"<token-del-correo>","newPassword":"NuevaClave123"}`.
+
+Ambos endpoints son publicos y devuelven HTTP 200 al completarse. La solicitud devuelve el mismo mensaje para cuentas inexistentes, inactivas o limitadas (una solicitud por cuenta cada 60 segundos). Los tokens vencen en 15 minutos, se almacenan como SHA-256 y se consumen atomicamente al cambiar la contrasena con bcrypt. Una nueva solicitud aceptada invalida el enlace anterior. Los errores de envio se registran sin exponer datos y revocan el token; el cliente mantiene la respuesta generica. Sin configuracion de correo se devuelve HTTP 503. Tokens invalidos, usados o vencidos devuelven HTTP 400.
+
+La nueva contrasena admite al menos 6 caracteres y hasta 72 bytes UTF-8. Este flujo no revoca los JWT ya emitidos: siguen vigentes hasta su expiracion. Configure tambien limites por IP en el proxy de despliegue. Este repositorio de API no incluye una pantalla de frontend.
+
+Referencia: [API de envio de Resend](https://resend.com/docs/api-reference/emails/send-email).
