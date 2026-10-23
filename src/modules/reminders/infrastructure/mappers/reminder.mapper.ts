@@ -11,6 +11,10 @@ export class ReminderMapper {
   static fromPrisma(reminder: Reminder): ReminderEntity {
     return new ReminderEntity({
       id: reminder.id,
+      advanceMinutes: reminder.advanceMinutes,
+      repeatMinutes: reminder.repeatMinutes,
+      repeatCount: reminder.repeatCount,
+      notifyCaregiver: reminder.notifyCaregiver,
       patientId: reminder.patientId,
       prescriptionItemId: reminder.prescriptionItemId,
       scheduledTime: reminder.scheduledTime,

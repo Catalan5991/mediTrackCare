@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateReminderDto } from '../dtos/create-reminder.dto';
 import { ReminderEntity } from '../../domain/entities/reminder.entity';
 import {
@@ -23,6 +23,8 @@ export class CreateReminderUseCase {
    * @returns Resultado producido por la operación.
    */
   execute(dto: CreateReminderDto): Promise<ReminderEntity> {
+    if (dto.repeatCount && !dto.repeatMinutes)
+      throw new BadRequestException('La repeticion requiere un intervalo.');
     // La persistencia valida relaciones con paciente e item de receta.
     return this.repository.create(dto);
   }

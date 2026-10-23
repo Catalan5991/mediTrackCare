@@ -18,6 +18,15 @@ type PrismaPrescriptionWithItems = {
     prescriptionId: number;
     medicationId: number;
     dose: string;
+    retiredAt?: Date | null;
+    doseUnit?: string | null;
+    scheduledTimes?: string[];
+    daysOfWeek?: number[];
+    timeZone?: string;
+    isActive?: boolean;
+    medication?: unknown;
+    quantity?: number | null;
+    duration?: string | null;
     frequency: string;
     instructions: string | null;
     startDate: Date;
@@ -54,6 +63,15 @@ export class PrismaPrescriptionMapper {
               prescriptionId: item.prescriptionId,
               medicationId: item.medicationId,
               dose: item.dose,
+              retiredAt: item.retiredAt,
+              doseUnit: item.doseUnit,
+              scheduledTimes: item.scheduledTimes,
+              daysOfWeek: item.daysOfWeek,
+              timeZone: item.timeZone,
+              isActive: item.isActive,
+              medication: item.medication,
+              quantity: item.quantity,
+              duration: item.duration,
               frequency: item.frequency,
               instructions: item.instructions,
               startDate: item.startDate,

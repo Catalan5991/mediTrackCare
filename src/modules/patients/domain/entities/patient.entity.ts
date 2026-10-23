@@ -25,7 +25,7 @@ export class Patient {
     public readonly id: number,
     public readonly userId: number,
     public readonly fullName: string,
-    public readonly birthDate: Date,
+    public readonly birthDate: Date | null,
     public readonly gender: PatientGender,
     public readonly phone: string | null,
     public readonly address: string | null,

@@ -1,12 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   ArrayMinSize,
+  ArrayMaxSize,
   IsArray,
   IsDateString,
   IsInt,
   IsOptional,
   IsPositive,
   IsString,
+  IsUUID,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -14,6 +16,13 @@ import { CreatePrescriptionItemDto } from './create-prescription-item.dto';
 
 // Valida el cuerpo necesario para crear una receta medica.
 export class CreatePrescriptionDto {
+  @ApiPropertyOptional({
+    description:
+      'UUID generado por el cliente para reintentos idempotentes de creacion.',
+  })
+  @IsOptional()
+  @IsUUID()
+  idempotencyKey?: string;
   @ApiProperty({ example: 1, minimum: 1, description: 'Id del paciente.' })
   @IsInt()
   @IsPositive()
@@ -68,6 +77,7 @@ export class CreatePrescriptionDto {
   })
   @IsArray()
   @ArrayMinSize(1)
+  @ArrayMaxSize(100)
   @ValidateNested({ each: true })
   @Type(() => CreatePrescriptionItemDto)
   items!: CreatePrescriptionItemDto[];

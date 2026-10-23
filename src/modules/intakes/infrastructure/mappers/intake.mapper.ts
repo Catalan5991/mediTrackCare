@@ -11,6 +11,8 @@ export class IntakeMapper {
   static fromPrisma(intake: Intake): IntakeEntity {
     return new IntakeEntity({
       id: intake.id,
+      occurrenceKey: intake.occurrenceKey,
+      prescriptionSnapshot: intake.prescriptionSnapshot,
       patientId: intake.patientId,
       prescriptionItemId: intake.prescriptionItemId,
       reminderId: intake.reminderId,

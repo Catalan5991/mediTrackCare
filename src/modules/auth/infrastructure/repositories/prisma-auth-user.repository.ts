@@ -7,11 +7,27 @@ import type {
 } from '../../domain/interfaces/auth-user-repository.interface';
 import { AuthUserMapper } from '../mappers/auth-user.mapper';
 
-const DEFAULT_ROLE_NAME = 'PATIENT';
-
 @Injectable()
 // Adaptador Prisma del puerto AuthUserRepository.
 export class PrismaAuthUserRepository implements AuthUserRepository {
+  async profileDetails(userId: number) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        phone: true,
+        patientProfile: { select: { id: true, phone: true, timeZone: true } },
+        doctorProfile: {
+          select: {
+            id: true,
+            professionalLicense: true,
+            specialty: true,
+            verificationStatus: true,
+            verifiedAt: true,
+          },
+        },
+      },
+    });
+  }
   /**
    * Inicializa una nueva instancia con sus dependencias y estado inicial.
    * @param prisma Servicio que coordina las operaciones de prisma.
@@ -23,19 +39,46 @@ export class PrismaAuthUserRepository implements AuthUserRepository {
    * @returns Promesa que resuelve con el resultado de la operación.
    */
   async create(data: CreateAuthUserData): Promise<AuthUser> {
-    const patientRole = await this.prisma.role.findFirstOrThrow({
-      where: { name: DEFAULT_ROLE_NAME, isActive: true },
-    });
-    const user = await this.prisma.user.create({
-      data: {
-        name: data.name,
-        email: data.email,
-        password: data.password,
-        role: { connect: { id: patientRole.id } },
-      },
-      include: {
-        role: true,
-      },
+    const profile = data.profile ?? 'PATIENT';
+    const user = await this.prisma.$transaction(async (tx) => {
+      const role = await tx.role.findFirstOrThrow({
+        where: { name: profile, isActive: true },
+      });
+      return tx.user.create({
+        data: {
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          phone: data.phone,
+          role: { connect: { id: role.id } },
+          ...(profile === 'PATIENT'
+            ? {
+                patientProfile: {
+                  create: {
+                    fullName: data.name,
+                    phone: data.phone,
+                    timeZone: data.timeZone ?? 'America/Mexico_City',
+                  },
+                },
+              }
+            : {}),
+          ...(profile === 'DOCTOR'
+            ? {
+                doctorProfile: {
+                  create: {
+                    fullName: data.name,
+                    email: data.email,
+                    phone: data.phone,
+                    professionalLicense: data.professionalLicense,
+                    specialty: data.specialty,
+                    verificationStatus: 'PENDING' as const,
+                  },
+                },
+              }
+            : {}),
+        },
+        include: { role: true },
+      });
     });
 
     return AuthUserMapper.toDomain(user);

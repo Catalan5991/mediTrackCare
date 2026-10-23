@@ -1,3 +1,4 @@
+import { PatientAccessModule } from './common/authorization/patient-access.module';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
@@ -30,6 +31,7 @@ import { DoctorsModule } from './modules/doctors/doctors.module';
       isGlobal: true,
     }),
     PrismaModule,
+    PatientAccessModule,
     AuthModule,
     RolesModule,
     UsersModule,

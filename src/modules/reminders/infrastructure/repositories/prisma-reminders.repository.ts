@@ -1,196 +1,173 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { Prisma } from '../../../../../generated/prisma/client';
-
-import { PrismaService } from '../../../prisma/prisma.service';
-import { CreateReminderDto } from '../../application/dtos/create-reminder.dto';
-import { FindRemindersDto } from '../../application/dtos/find-reminders.dto';
-import { UpdateReminderDto } from '../../application/dtos/update-reminder.dto';
-import { ReminderEntity } from '../../domain/entities/reminder.entity';
 import {
-  RemindersPaginatedResponse,
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma } from '../../../../../generated/prisma/client';
+import { PrismaService } from '../../../prisma/prisma.service';
+import { PatientAccessService } from '../../../../common/authorization/patient-access.service';
+import { CreateReminderDto } from '../../application/dtos/create-reminder.dto';
+import { UpdateReminderDto } from '../../application/dtos/update-reminder.dto';
+import { FindRemindersDto } from '../../application/dtos/find-reminders.dto';
+import { ReminderEntity } from '../../domain/entities/reminder.entity';
+import type {
   RemindersRepository,
+  RemindersPaginatedResponse,
 } from '../../domain/interfaces/reminders.repository.interface';
 import { ReminderMapper } from '../mappers/reminder.mapper';
-
 @Injectable()
-// Implementacion del contrato de repositorio usando Prisma como fuente de datos.
 export class PrismaRemindersRepository implements RemindersRepository {
-  /**
-   * Inicializa una nueva instancia con sus dependencias y estado inicial.
-   * @param prisma Servicio que coordina las operaciones de prisma.
-   */
-  constructor(private readonly prisma: PrismaService) {}
-  /**
-   * Crea un recordatorio con los datos recibidos.
-   * @param data Datos de data validados para la operacion.
-   * @returns Promesa que resuelve con el resultado de la operación.
-   */
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly access: PatientAccessService,
+  ) {}
   async create(data: CreateReminderDto): Promise<ReminderEntity> {
-    try {
-      const reminder = await this.prisma.reminder.create({
-        data: {
-          patientId: data.patientId,
-          prescriptionItemId: data.prescriptionItemId,
-          scheduledTime: data.scheduledTime,
-          daysOfWeek: data.daysOfWeek ?? null,
-          isActive: data.isActive ?? true,
-        },
-      });
-
-      return ReminderMapper.fromPrisma(reminder);
-    } catch (error) {
-      this.handlePrismaError(error);
-    }
+    return this.prisma.$transaction(
+      async (tx) => {
+        await this.access.assert(data.patientId, 'reminders', tx);
+        const item = await tx.prescriptionItem.findUnique({
+          where: { id: data.prescriptionItemId },
+          include: { prescription: true },
+        });
+        if (
+          !item?.isActive ||
+          item.prescription.status !== 'ACTIVO' ||
+          item.prescription.patientId !== data.patientId ||
+          !item.scheduledTimes.includes(data.scheduledTime)
+        )
+          throw new BadRequestException(
+            'El horario debe estar indicado en una prescripcion activa del paciente.',
+          );
+        if (data.daysOfWeek)
+          throw new BadRequestException(
+            'Los dias clinicos se modifican en la prescripcion.',
+          );
+        if (
+          await tx.reminder.findFirst({
+            where: {
+              prescriptionItemId: item.id,
+              scheduledTime: data.scheduledTime,
+            },
+          })
+        )
+          throw new ConflictException(
+            'El recordatorio ya existe; modifica sus preferencias.',
+          );
+        const result = await tx.reminder.create({
+          data: {
+            patientId: data.patientId,
+            prescriptionItemId: item.id,
+            scheduledTime: data.scheduledTime,
+            isActive: data.isActive ?? true,
+            advanceMinutes: data.advanceMinutes,
+            repeatMinutes: data.repeatMinutes,
+            repeatCount: data.repeatCount,
+            notifyCaregiver: data.notifyCaregiver,
+          },
+        });
+        return ReminderMapper.fromPrisma(result);
+      },
+      { isolationLevel: 'Serializable' },
+    );
   }
-  /**
-   * Obtiene el listado de recordatorios que cumplen los filtros indicados.
-   * @param filters Datos de filters validados para la operacion.
-   * @returns Promesa que resuelve con el resultado de la operación.
-   */
   async findAll(
     filters: FindRemindersDto,
   ): Promise<RemindersPaginatedResponse> {
-    // Paginacion basada en page/limit para mantener estable la respuesta.
-    const page = filters.page ?? 1;
-    const limit = filters.limit ?? 10;
-    const skip = (page - 1) * limit;
-
-    const where: Prisma.ReminderWhereInput = {};
-
-    // Construye el where incrementalmente solo con filtros presentes.
-    if (filters.patientId) {
-      where.patientId = filters.patientId;
-    }
-
-    if (filters.prescriptionItemId) {
-      where.prescriptionItemId = filters.prescriptionItemId;
-    }
-
-    if (filters.scheduledTime) {
-      where.scheduledTime = filters.scheduledTime;
-    }
-
-    if (filters.isActive !== undefined) {
-      where.isActive = filters.isActive;
-    }
-
-    // Consulta y conteo via transaccion para que ambos usen el mismo filtro.
-    const [reminders, total] = await this.prisma.$transaction([
+    const page = filters.page ?? 1,
+      limit = Math.min(filters.limit ?? 10, 100);
+    const where: Prisma.ReminderWhereInput = {
+      patient: await this.access.patientWhere(),
+      patientId: filters.patientId,
+      prescriptionItemId: filters.prescriptionItemId,
+      scheduledTime: filters.scheduledTime,
+      isActive: filters.isActive,
+    };
+    const [rows, total] = await this.prisma.$transaction([
       this.prisma.reminder.findMany({
         where,
-        orderBy: {
-          createdAt: 'desc',
-        },
-        skip,
+        skip: (page - 1) * limit,
         take: limit,
+        orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.reminder.count({
-        where,
-      }),
+      this.prisma.reminder.count({ where }),
     ]);
-
     return {
-      data: reminders.map(ReminderMapper.fromPrisma),
-      meta: {
-        total,
-        page,
-        limit,
-        lastPage: Math.ceil(total / limit),
-      },
+      data: rows.map(ReminderMapper.fromPrisma),
+      meta: { total, page, limit, lastPage: Math.ceil(total / limit) },
     };
   }
-  /**
-   * Actualiza un recordatorio existente.
-   * @param id Identificador único del recurso.
-   * @param data Datos de data validados para la operacion.
-   * @returns Promesa que resuelve con el resultado de la operación.
-   */
-  async update(id: number, data: UpdateReminderDto): Promise<ReminderEntity> {
-    try {
-      // Evita enviar campos undefined para no sobrescribir datos existentes.
-      const updateData: Prisma.ReminderUncheckedUpdateInput = {};
-
-      if (data.patientId !== undefined) {
-        updateData.patientId = data.patientId;
-      }
-
-      if (data.prescriptionItemId !== undefined) {
-        updateData.prescriptionItemId = data.prescriptionItemId;
-      }
-
-      if (data.scheduledTime !== undefined) {
-        updateData.scheduledTime = data.scheduledTime;
-      }
-
-      if (data.daysOfWeek !== undefined) {
-        updateData.daysOfWeek = data.daysOfWeek;
-      }
-
-      if (data.isActive !== undefined) {
-        updateData.isActive = data.isActive;
-      }
-
-      const reminder = await this.prisma.reminder.update({
-        where: { id },
-        data: updateData,
-      });
-
-      return ReminderMapper.fromPrisma(reminder);
-    } catch (error) {
-      this.handlePrismaError(error);
-    }
-  }
-  /**
-   * Ejecuta la operación handle prisma error.
-   * @param error Valor de error requerido por la operacion.
-   * @returns Resultado producido por la operación.
-   * @throws {BadRequestException} Cuando los datos o el estado incumplen la regla de negocio validada.
-   * @throws {Error} Cuando los datos o el estado incumplen la regla de negocio validada.
-   */
-  private handlePrismaError(error: unknown): never {
-    // Traduce errores conocidos de Prisma a excepciones HTTP entendibles.
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2003') {
-        throw new BadRequestException(
-          'No existe el paciente o item de receta relacionado con el recordatorio.',
-        );
-      }
-
-      if (error.code === 'P2025') {
-        throw new BadRequestException(
-          'No se pudo completar la operacion porque el registro no existe.',
-        );
-      }
-    }
-
-    throw error;
-  }
-
-  /**
-   * Obtiene un recordatorio por su identificador.
-   * @param id Identificador único del recurso.
-   * @returns Promesa que resuelve con el resultado de la operación.
-   */
   async findById(id: number): Promise<ReminderEntity | null> {
-    const reminder = await this.prisma.reminder.findUnique({
-      where: { id },
-    });
-
-    if (!reminder) {
-      return null;
-    }
-
-    return ReminderMapper.fromPrisma(reminder);
+    await this.access.resource('reminder', id);
+    const row = await this.prisma.reminder.findUnique({ where: { id } });
+    return row ? ReminderMapper.fromPrisma(row) : null;
   }
-
-  /**
-   * Elimina un recordatorio por su identificador.
-   * @param id Identificador único del recurso.
-   * @returns No retorna ningún valor.
-   */
+  async update(id: number, data: UpdateReminderDto): Promise<ReminderEntity> {
+    return this.prisma.$transaction(
+      async (tx) => {
+        const old = await tx.reminder.findUnique({ where: { id } });
+        if (!old) throw new NotFoundException();
+        await this.access.assert(old.patientId, 'reminders', tx);
+        if (
+          (data.patientId !== undefined && data.patientId !== old.patientId) ||
+          (data.prescriptionItemId !== undefined &&
+            data.prescriptionItemId !== old.prescriptionItemId) ||
+          (data.scheduledTime !== undefined &&
+            data.scheduledTime !== old.scheduledTime) ||
+          (data.daysOfWeek !== undefined && data.daysOfWeek !== old.daysOfWeek)
+        )
+          throw new BadRequestException(
+            'Solo se pueden cambiar preferencias; los horarios pertenecen a la prescripcion.',
+          );
+        if (
+          (data.repeatCount ?? old.repeatCount) > 0 &&
+          !(data.repeatMinutes ?? old.repeatMinutes)
+        )
+          throw new BadRequestException('La repeticion requiere un intervalo.');
+        const preferences = {
+          isActive: data.isActive,
+          advanceMinutes: data.advanceMinutes,
+          repeatMinutes: data.repeatMinutes,
+          repeatCount: data.repeatCount,
+          notifyCaregiver: data.notifyCaregiver,
+        };
+        if (
+          Object.entries(preferences).every(
+            ([key, value]) =>
+              value === undefined || value === old[key as keyof typeof old],
+          )
+        )
+          return ReminderMapper.fromPrisma(old);
+        const row = await tx.reminder.update({
+          where: { id },
+          data: {
+            isActive: data.isActive,
+            advanceMinutes: data.advanceMinutes,
+            repeatMinutes: data.repeatMinutes,
+            repeatCount: data.repeatCount,
+            notifyCaregiver: data.notifyCaregiver,
+          },
+        });
+        await tx.notification.updateMany({
+          where: { intake: { reminderId: id }, status: 'PENDIENTE' },
+          data: { cancelledAt: new Date() },
+        });
+        await tx.auditLog.create({
+          data: {
+            userId: this.access.actor().id,
+            module: 'reminders',
+            action: 'PREFERENCES',
+            entityName: 'Reminder',
+            entityId: id,
+            description: JSON.stringify({ before: old, after: row }),
+          },
+        });
+        return ReminderMapper.fromPrisma(row);
+      },
+      { isolationLevel: 'Serializable' },
+    );
+  }
   async delete(id: number): Promise<void> {
-    await this.prisma.reminder.delete({
-      where: { id },
-    });
+    await this.update(id, { isActive: false });
   }
 }

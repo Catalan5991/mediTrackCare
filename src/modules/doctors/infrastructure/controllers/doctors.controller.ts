@@ -1,3 +1,5 @@
+import { ManagePatientLinksUseCase } from '../../../patients/application/use-cases/manage-patient-links.use-case';
+import { VerifyDoctorDto } from '../../../patients/application/dtos/patient-link.dto';
 import {
   Body,
   Controller,
@@ -41,7 +43,19 @@ export class DoctorsController {
    * Inicializa una nueva instancia con sus dependencias y estado inicial.
    * @param service Servicio que coordina las operaciones de service.
    */
-  constructor(private readonly service: DoctorsService) {}
+  constructor(
+    private readonly service: DoctorsService,
+    private readonly links: ManagePatientLinksUseCase,
+  ) {}
+  @Patch(':id/verification')
+  @Roles(SystemRole.ADMIN)
+  @ApiOperation({
+    summary:
+      'Registrar resultado de verificacion profesional (revision manual)',
+  })
+  verify(@Param('id', ParseIntPipe) id: number, @Body() dto: VerifyDoctorDto) {
+    return this.links.verify(id, dto);
+  }
   /**
    * Crea un medico con los datos recibidos.
    * @param dto Datos de dto validados para la operacion.

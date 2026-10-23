@@ -1,3 +1,4 @@
+import { PatientAccessService } from '../../../../common/authorization/patient-access.service';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '../../../../../generated/prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -17,13 +18,17 @@ export class PrismaPatientsRepository implements PatientsRepository {
    * Inicializa una nueva instancia con sus dependencias y estado inicial.
    * @param prisma Servicio que coordina las operaciones de prisma.
    */
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly access: PatientAccessService,
+  ) {}
   /**
    * Crea un paciente con los datos recibidos.
    * @param data Valor de data requerido por la operacion.
    * @returns Promesa que resuelve con el resultado de la operación.
    */
   async create(data: CreatePatientData): Promise<Patient> {
+    this.access.admin();
     const patient = await this.prisma.patient.create({
       data: {
         userId: data.userId,
@@ -50,6 +55,7 @@ export class PrismaPatientsRepository implements PatientsRepository {
     const skip = (page - 1) * limit;
 
     const where: Prisma.PatientWhereInput = {
+      AND: [await this.access.patientWhere()],
       ...(params.isActive !== undefined && {
         isActive: params.isActive,
       }),
@@ -108,6 +114,7 @@ export class PrismaPatientsRepository implements PatientsRepository {
     });
 
     if (!patient) return null;
+    await this.access.assert(patient.id);
 
     return PatientMapper.toDomain(patient);
   }
@@ -118,6 +125,7 @@ export class PrismaPatientsRepository implements PatientsRepository {
    * @returns Promesa que resuelve con el resultado de la operación.
    */
   async update(id: number, data: UpdatePatientData): Promise<Patient> {
+    this.access.admin();
     const patient = await this.prisma.patient.update({
       where: { id },
       data: {
@@ -141,6 +149,7 @@ export class PrismaPatientsRepository implements PatientsRepository {
    * @returns Promesa que resuelve con el resultado de la operación.
    */
   async softDelete(id: number): Promise<Patient> {
+    this.access.admin();
     const patient = await this.prisma.patient.update({
       where: { id },
       data: {
@@ -157,6 +166,7 @@ export class PrismaPatientsRepository implements PatientsRepository {
    * @returns Promesa que resuelve con el resultado de la operación.
    */
   async findById(id: number): Promise<Patient | null> {
+    await this.access.assert(id);
     const patient = await this.prisma.patient.findUnique({
       where: { id },
     });

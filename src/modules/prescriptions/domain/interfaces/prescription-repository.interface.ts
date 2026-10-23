@@ -7,6 +7,10 @@ export const PRESCRIPTION_REPOSITORY = 'PRESCRIPTION_REPOSITORY';
 // Datos necesarios para crear o reemplazar un medicamento dentro de una receta.
 export interface PrescriptionItemInput {
   medicationId: number;
+  scheduledTimes?: string[];
+  daysOfWeek?: number[];
+  timeZone?: string;
+  doseUnit?: string;
   dose: string;
   frequency: string;
   duration?: string;
@@ -18,6 +22,7 @@ export interface PrescriptionItemInput {
 
 // Contrato de entrada para registrar una receta con sus medicamentos.
 export interface CreatePrescriptionInput {
+  idempotencyKey?: string;
   patientId: number;
   doctorId?: number;
   diagnosis?: string;

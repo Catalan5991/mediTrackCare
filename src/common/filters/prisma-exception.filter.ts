@@ -38,6 +38,15 @@ export class PrismaExceptionFilter implements ExceptionFilter {
       // metadata de base de datos. Esto tambien cubre condiciones de carrera,
       // por ejemplo cuando un registro desaparece despues de validar existencia.
       switch (exception.code) {
+        case 'P2034':
+          return new ConflictException(
+            'El recurso cambio durante la operacion; vuelve a consultar e intenta de nuevo.',
+          );
+        case 'P2021':
+        case 'P2022':
+          return new InternalServerErrorException(
+            'El esquema de base de datos requiere actualizar sus migraciones.',
+          );
         case 'P2002':
           // Restriccion unique: el recurso solicitado duplicaria datos unicos.
           return new ConflictException(

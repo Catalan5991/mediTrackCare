@@ -1,3 +1,4 @@
+import { ResolveIntakeDto } from '../../application/dtos/resolve-intake.dto';
 import {
   Body,
   Controller,
@@ -92,6 +93,26 @@ export class IntakesController {
    * @param id Identificador único del recurso.
    * @returns Resultado producido por la operación.
    */
+  @Patch(':id/confirm')
+  @Permissions(Permission.REGISTER_INTAKES)
+  @ApiOperation({
+    summary: 'Confirmar administracion; una repeticion identica es idempotente',
+  })
+  confirm(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ResolveIntakeDto,
+  ) {
+    return this.intakesService.update(id, { ...dto, status: 'TOMADA' });
+  }
+  @Patch(':id/skip')
+  @Permissions(Permission.REGISTER_INTAKES)
+  @ApiOperation({
+    summary: 'Registrar omision explicita de una toma cuyo horario ya llego',
+  })
+  skip(@Param('id', ParseIntPipe) id: number, @Body() dto: ResolveIntakeDto) {
+    return this.intakesService.update(id, { ...dto, status: 'OMITIDA' });
+  }
+
   @Get(':id')
   @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({

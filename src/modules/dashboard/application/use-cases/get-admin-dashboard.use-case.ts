@@ -1,3 +1,4 @@
+import { PatientAccessService } from '../../../../common/authorization/patient-access.service';
 import { Inject, Injectable } from '@nestjs/common';
 
 import { DashboardFilterDto } from '../dtos/dashboard-filter.dto';
@@ -20,6 +21,7 @@ export class GetAdminDashboardUseCase {
     @Inject(DASHBOARD_REPOSITORY)
     private readonly dashboardRepository: DashboardRepository,
     private readonly dashboardService: DashboardService,
+    private readonly access: PatientAccessService,
   ) {}
   /**
    * Obtiene informacion de panel segun los criterios indicados.
@@ -27,6 +29,7 @@ export class GetAdminDashboardUseCase {
    * @returns Resultado producido por la operación.
    */
   execute(filters: DashboardFilterDto) {
+    this.access.admin();
     // El periodo se resuelve aqui para que el controller no tenga calculos.
     const period = this.dashboardService.resolvePeriod(filters.period);
 

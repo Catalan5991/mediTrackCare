@@ -23,5 +23,7 @@ export class Doctor {
     public readonly isActive: boolean,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
+    public readonly verificationStatus: string = 'PENDING',
+    public readonly verifiedAt: Date | null = null,
   ) {}
 }
