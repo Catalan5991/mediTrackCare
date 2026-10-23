@@ -32,6 +32,9 @@ model User {
   name      String
   email     String   @unique
   password  String
+  passwordResetTokenHash String? @unique @map("password_reset_token_hash")
+  passwordResetExpiresAt DateTime? @map("password_reset_expires_at")
+  passwordResetRequestedAt DateTime? @map("password_reset_requested_at")
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

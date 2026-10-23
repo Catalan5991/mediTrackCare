@@ -1,3 +1,8 @@
+import { PasswordResetUseCase } from './application/use-cases/password-reset.use-case';
+import { PASSWORD_RESET_REPOSITORY } from './domain/interfaces/password-reset-repository.interface';
+import { PASSWORD_RESET_MAILER } from './domain/interfaces/password-reset-mailer.interface';
+import { PrismaPasswordResetRepository } from './infrastructure/repositories/prisma-password-reset.repository';
+import { ResendPasswordResetMailer } from './infrastructure/services/resend-password-reset-mailer.service';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -43,6 +48,12 @@ import { JwtAuthGuard } from './infrastructure/guards/jwt-auth.guard';
   ],
   controllers: [AuthController],
   providers: [
+    PasswordResetUseCase,
+    {
+      provide: PASSWORD_RESET_REPOSITORY,
+      useClass: PrismaPasswordResetRepository,
+    },
+    { provide: PASSWORD_RESET_MAILER, useClass: ResendPasswordResetMailer },
     RegisterUserUseCase,
     LoginUserUseCase,
     GetProfileUseCase,
