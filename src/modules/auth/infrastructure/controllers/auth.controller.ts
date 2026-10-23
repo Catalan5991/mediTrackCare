@@ -13,6 +13,11 @@ import {
   PasswordResetResponseDto,
 } from '../../application/dtos/password-reset.dto';
 import { PasswordResetUseCase } from '../../application/use-cases/password-reset.use-case';
+import {
+  RegisterPatientDto,
+  RegisterCaregiverDto,
+  RegisterDoctorDto,
+} from '../../application/dtos/register-profile.dto';
 import { RegisterDto } from '../../application/dtos/register.dto';
 import { LoginDto } from '../../application/dtos/login.dto';
 import { RegisterUserUseCase } from '../../application/use-cases/register-user.use-case';
@@ -123,6 +128,33 @@ export class AuthController {
   })
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.passwordResetUseCase.reset(dto);
+  }
+
+  @Public()
+  @Post('register/patient')
+  @ApiOperation({ summary: 'Registrar paciente con perfil y telefono' })
+  @ApiResponse({ status: 201, type: AuthResponseDto })
+  registerPatient(@Body() dto: RegisterPatientDto) {
+    return this.registerUserUseCase.execute(dto, 'PATIENT');
+  }
+  @Public()
+  @Post('register/caregiver')
+  @ApiOperation({
+    summary:
+      'Registrar cuidador sin acceso clinico hasta autorizacion del paciente',
+  })
+  @ApiResponse({ status: 201, type: AuthResponseDto })
+  registerCaregiver(@Body() dto: RegisterCaregiverDto) {
+    return this.registerUserUseCase.execute(dto, 'CAREGIVER');
+  }
+  @Public()
+  @Post('register/doctor')
+  @ApiOperation({
+    summary: 'Solicitar registro medico; verificacion profesional pendiente',
+  })
+  @ApiResponse({ status: 201, type: AuthResponseDto })
+  registerDoctor(@Body() dto: RegisterDoctorDto) {
+    return this.registerUserUseCase.execute(dto, 'DOCTOR');
   }
 
   @Get('profile')

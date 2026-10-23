@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { PatientAccessService } from '../../../../common/authorization/patient-access.service';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { Prisma } from '../../../../../generated/prisma/client';
 
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -19,13 +20,17 @@ export class PrismaDoctorsRepository implements DoctorsRepository {
    * Inicializa una nueva instancia con sus dependencias y estado inicial.
    * @param prisma Servicio que coordina las operaciones de prisma.
    */
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly access: PatientAccessService,
+  ) {}
   /**
    * Crea un medico con los datos recibidos.
    * @param data Valor de data requerido por la operacion.
    * @returns Promesa que resuelve con el resultado de la operación.
    */
   async create(data: CreateDoctorData): Promise<Doctor> {
+    this.access.admin();
     const doctor = await this.prisma.doctor.create({ data });
     return DoctorMapper.toDomain(doctor);
   }
@@ -139,6 +144,7 @@ export class PrismaDoctorsRepository implements DoctorsRepository {
    * @returns Promesa que resuelve con el resultado de la operación.
    */
   async update(id: number, data: UpdateDoctorData): Promise<Doctor> {
+    this.access.admin();
     const doctor = await this.prisma.doctor.update({ where: { id }, data });
     return DoctorMapper.toDomain(doctor);
   }
@@ -148,6 +154,7 @@ export class PrismaDoctorsRepository implements DoctorsRepository {
    * @returns Promesa que resuelve con el resultado de la operación.
    */
   async softDelete(id: number): Promise<Doctor> {
+    this.access.admin();
     const doctor = await this.prisma.doctor.update({
       where: { id },
       data: { isActive: false },
@@ -164,10 +171,27 @@ export class PrismaDoctorsRepository implements DoctorsRepository {
     doctorId: number,
     patientId: number,
   ): Promise<DoctorPatientAssignment> {
+    this.access.admin();
+    const verified = await this.prisma.doctor.findFirst({
+      where: { id: doctorId, isActive: true, verificationStatus: 'VERIFIED' },
+    });
+    if (!verified)
+      throw new ForbiddenException('Se requiere un medico verificado.');
     const assignment = await this.prisma.doctorPatient.upsert({
       where: { doctorId_patientId: { doctorId, patientId } },
-      create: { doctorId, patientId },
-      update: { isActive: true },
+      create: {
+        doctorId,
+        patientId,
+        status: 'ACTIVE',
+        acceptedAt: new Date(),
+        requestedByUserId: this.access.actor().id,
+      },
+      update: {
+        isActive: true,
+        status: 'ACTIVE',
+        canRead: true,
+        acceptedAt: new Date(),
+      },
     });
     return new DoctorPatientAssignment(
       assignment.doctorId,
@@ -187,9 +211,10 @@ export class PrismaDoctorsRepository implements DoctorsRepository {
     doctorId: number,
     patientId: number,
   ): Promise<DoctorPatientAssignment> {
+    this.access.admin();
     const assignment = await this.prisma.doctorPatient.update({
       where: { doctorId_patientId: { doctorId, patientId } },
-      data: { isActive: false },
+      data: { isActive: false, status: 'REVOKED' },
     });
     return new DoctorPatientAssignment(
       assignment.doctorId,
@@ -208,7 +233,13 @@ export class PrismaDoctorsRepository implements DoctorsRepository {
     doctorId: number,
   ): Promise<DoctorPatientAssignment[]> {
     const assignments = await this.prisma.doctorPatient.findMany({
-      where: { doctorId, isActive: true },
+      where: {
+        doctorId,
+        isActive: true,
+        status: 'ACTIVE',
+        canRead: true,
+        patient: await this.access.patientWhere(),
+      },
       orderBy: { createdAt: 'desc' },
     });
     return assignments.map(

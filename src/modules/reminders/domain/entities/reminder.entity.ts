@@ -7,6 +7,10 @@ export class ReminderEntity {
     description: 'Identificador unico del recordatorio.',
   })
   id!: number;
+  @ApiProperty() advanceMinutes!: number;
+  @ApiPropertyOptional() repeatMinutes?: number | null;
+  @ApiProperty() repeatCount!: number;
+  @ApiProperty() notifyCaregiver!: boolean;
 
   @ApiProperty({
     example: 1,

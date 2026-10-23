@@ -85,7 +85,6 @@ export class MedicationsController {
    * @returns Resultado producido por la operación.
    */
   @Get(':id')
-  @Roles(SystemRole.ADMIN, SystemRole.DOCTOR)
   @ApiOperation({ summary: 'Obtener un medicamento por id' })
   @ApiResponse({
     status: 200,

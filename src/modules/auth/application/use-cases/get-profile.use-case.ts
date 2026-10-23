@@ -27,6 +27,9 @@ export class GetProfileUseCase {
       throw new UserNotFoundException();
     }
 
-    return user.toSafeObject();
+    return {
+      ...user.toSafeObject(),
+      ...(await this.authUserRepository.profileDetails?.(userId)),
+    };
   }
 }

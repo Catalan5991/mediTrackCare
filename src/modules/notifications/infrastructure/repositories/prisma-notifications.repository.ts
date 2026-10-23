@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { PatientAccessService } from '../../../../common/authorization/patient-access.service';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import {
   NotificationStatus,
   Prisma,
@@ -17,17 +18,34 @@ import {
 @Injectable()
 // Implementacion del repositorio de notificaciones usando Prisma.
 export class PrismaNotificationsRepository implements INotificationsRepository {
+  private async assertOwner(id: number) {
+    const row = await this.prisma.notification.findUnique({ where: { id } }),
+      actor = this.access.actor();
+    if (row && actor.role.toUpperCase() !== 'ADMIN') {
+      if (
+        row.userId !== actor.id ||
+        row.cancelledAt ||
+        (row.scheduledFor && row.scheduledFor > new Date())
+      )
+        throw new ForbiddenException('Notificacion fuera de alcance.');
+      if (row.patientId) await this.access.assert(row.patientId);
+    }
+  }
   /**
    * Inicializa una nueva instancia con sus dependencias y estado inicial.
    * @param prisma Servicio que coordina las operaciones de prisma.
    */
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly access: PatientAccessService,
+  ) {}
   /**
    * Crea un notificacion con los datos recibidos.
    * @param data Valor de data requerido por la operacion.
    * @returns Promesa que resuelve con el resultado de la operación.
    */
   async create(data: CreateNotificationData): Promise<NotificationEntity> {
+    this.access.admin();
     // El mapper mantiene fuera de Prisma los detalles del contrato de dominio.
     const notification = await this.prisma.notification.create({
       data: NotificationMapper.toPrismaCreate(data),
@@ -46,7 +64,21 @@ export class PrismaNotificationsRepository implements INotificationsRepository {
     const limit = Math.min(Math.max(Number(filters.limit ?? 10), 1), 100);
     const skip = (page - 1) * limit;
 
-    const where: Prisma.NotificationWhereInput = {};
+    const where: Prisma.NotificationWhereInput = {
+      cancelledAt: null,
+      AND: [
+        { OR: [{ scheduledFor: null }, { scheduledFor: { lte: new Date() } }] },
+      ],
+    };
+    if (this.access.actor().role.toUpperCase() !== 'ADMIN') {
+      filters.userId = this.access.actor().id;
+      (where.AND as Prisma.NotificationWhereInput[]).push({
+        OR: [
+          { patientId: null },
+          { patient: await this.access.patientWhere() },
+        ],
+      });
+    }
 
     // Construye el filtro solo con valores presentes.
     if (filters.userId !== undefined) {
@@ -127,6 +159,7 @@ export class PrismaNotificationsRepository implements INotificationsRepository {
     id: number,
     data: UpdateNotificationData,
   ): Promise<NotificationEntity> {
+    this.access.admin();
     const notification = await this.prisma.notification.update({
       where: { id },
       data: NotificationMapper.toPrismaUpdate(data),
@@ -141,6 +174,7 @@ export class PrismaNotificationsRepository implements INotificationsRepository {
    * @returns Promesa que resuelve con el resultado de la operación.
    */
   async markAsRead(id: number, readAt: Date): Promise<NotificationEntity> {
+    await this.assertOwner(id);
     // Actualiza estado y marca temporal de lectura en una sola operacion.
     const notification = await this.prisma.notification.update({
       where: { id },
@@ -159,6 +193,7 @@ export class PrismaNotificationsRepository implements INotificationsRepository {
    * @returns Promesa que resuelve con el resultado de la operación.
    */
   async markAsSent(id: number, sentAt: Date): Promise<NotificationEntity> {
+    this.access.admin();
     // Actualiza estado y marca temporal de envio en una sola operacion.
     const notification = await this.prisma.notification.update({
       where: { id },
@@ -177,6 +212,7 @@ export class PrismaNotificationsRepository implements INotificationsRepository {
    * @returns Promesa que resuelve con el resultado de la operación.
    */
   async findById(id: number): Promise<NotificationEntity | null> {
+    await this.assertOwner(id);
     const notification = await this.prisma.notification.findUnique({
       where: { id },
     });
@@ -194,6 +230,7 @@ export class PrismaNotificationsRepository implements INotificationsRepository {
    * @returns No retorna ningún valor.
    */
   async delete(id: number): Promise<void> {
+    this.access.admin();
     await this.prisma.notification.delete({
       where: { id },
     });

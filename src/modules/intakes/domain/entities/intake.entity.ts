@@ -8,6 +8,8 @@ export class IntakeEntity {
     description: 'Identificador unico de la toma.',
   })
   id!: number;
+  @ApiPropertyOptional() occurrenceKey?: string | null;
+  @ApiPropertyOptional({ type: Object }) prescriptionSnapshot?: unknown;
 
   @ApiProperty({
     example: 1,
