@@ -70,7 +70,19 @@ export class PatientTreatmentsService {
     if(dto.patientId!==undefined&&dto.patientId!==old.patientId)throw new BadRequestException('No se puede cambiar de paciente.');
     if(dto.medicationId!==undefined&&dto.medicationId!==old.medicationId)throw new BadRequestException('Para cambiar de medicamento crea otro tratamiento.');
     if(dto.origin!==undefined&&dto.origin!==old.origin)throw new BadRequestException('No se puede alterar el origen del registro.');
-    this.verify({...old,...dto});
+    this.verify({
+      patientId:old.patientId,medicationId:old.medicationId,origin:old.origin,
+      externalPrescriberName:dto.externalPrescriberName??old.externalPrescriberName??undefined,
+      externalPrescriptionDate:dto.externalPrescriptionDate??old.externalPrescriptionDate?.toISOString(),
+      dose:dto.dose??old.dose??undefined,doseUnit:dto.doseUnit??old.doseUnit??undefined,
+      frequency:dto.frequency??old.frequency??undefined,
+      instructions:dto.instructions??old.instructions??undefined,
+      notes:dto.notes??old.notes??undefined,
+      startDate:dto.startDate??old.startDate?.toISOString(),
+      endDate:dto.endDate??old.endDate?.toISOString(),
+      scheduledTimes:dto.scheduledTimes??old.scheduledTimes,
+      daysOfWeek:dto.daysOfWeek??old.daysOfWeek,
+    });
     await this.authorize(old.patientId,'reminders');
     const actor=this.access.actor();
     if(actor.role.toUpperCase()==='DOCTOR')throw new ForbiddenException();
@@ -100,7 +112,8 @@ export class PatientTreatmentsService {
     if(dto.status===TreatmentIntakeStatus.SKIPPED&&dto.takenAt)
       throw new BadRequestException('Una toma omitida no tiene hora de administración.');
     const scheduledAt=dto.scheduledAt?new Date(dto.scheduledAt):null;
-    if(scheduledAt&&scheduledAt>now)throw new BadRequestException('No se pueden confirmar horarios futuros.');
+    if(scheduledAt && (!Number.isFinite(scheduledAt.getTime()) || scheduledAt>now))
+      throw new BadRequestException('No se pueden confirmar horarios futuros o inválidos.');
     return this.prisma.$transaction(async tx=>{
       const row=await tx.patientTreatmentIntake.create({data:{
         patientTreatmentId:id,recordedByUserId:this.access.actor().id,status:dto.status,
