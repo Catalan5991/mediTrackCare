@@ -24,6 +24,7 @@ import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { FilesModule } from './modules/files/files.module';
 import { DoctorsModule } from './modules/doctors/doctors.module';
+import { PatientTreatmentsModule } from './modules/patient-treatments/patient-treatments.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { DoctorsModule } from './modules/doctors/doctors.module';
     AuditLogsModule,
     DashboardModule,
     FilesModule,
+    PatientTreatmentsModule,
   ],
   controllers: [AppController],
   providers: [
