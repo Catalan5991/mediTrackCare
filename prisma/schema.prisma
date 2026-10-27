@@ -51,6 +51,8 @@ model User {
   registeredMeasurements MedicalMeasurement[] @relation("MeasurementRegisteredBy")
   notifications          Notification[]
   auditLogs              AuditLog[]
+  registeredTreatments   PatientTreatment[] @relation("PatientTreatmentRegisteredBy")
+  recordedTreatmentIntakes PatientTreatmentIntake[] @relation("PatientTreatmentIntakeRecordedBy")
 
   @@index([roleId])
   @@map("users")
@@ -81,6 +83,7 @@ model Patient {
   notifications       Notification[]
   files               File[]
   doctorAssignments   DoctorPatient[]
+  personalTreatments  PatientTreatment[]
 
   @@map("patients")
 }
@@ -146,6 +149,7 @@ model Medication {
 
   prescriptionItems PrescriptionItem[]
   files             File[]
+  personalTreatments PatientTreatment[]
 
   @@map("medications")
 }
@@ -345,6 +349,80 @@ model AuditLog {
 
   @@index([userId])
   @@map("audit_logs")
+}
+
+
+/**
+ * Registro personal o transcripcion de una receta externa.
+ * No se considera prescripcion medica emitida ni verificada en la plataforma.
+ */
+model PatientTreatment {
+  id                     Int              @id @default(autoincrement())
+  patientId              Int              @map("patient_id")
+  medicationId           Int              @map("medication_id")
+  registeredByUserId     Int              @map("registered_by_user_id")
+  origin                 TreatmentOrigin
+  status                 TreatmentStatus  @default(ACTIVE)
+  externalPrescriberName String?          @map("external_prescriber_name")
+  externalPrescriptionDate DateTime?      @map("external_prescription_date") @db.Date
+  dose                   String?
+  doseUnit               String?          @map("dose_unit")
+  frequency              String?
+  instructions           String?
+  notes                  String?
+  startDate              DateTime?        @map("start_date") @db.Date
+  endDate                DateTime?        @map("end_date") @db.Date
+  scheduledTimes         String[]         @default([]) @map("scheduled_times")
+  daysOfWeek             Int[]            @default([]) @map("days_of_week")
+  timeZone               String           @map("time_zone")
+  createdAt              DateTime         @default(now()) @map("created_at")
+  updatedAt              DateTime         @updatedAt @map("updated_at")
+
+  patient                Patient          @relation(fields: [patientId], references: [id])
+  medication             Medication       @relation(fields: [medicationId], references: [id])
+  registeredBy           User             @relation("PatientTreatmentRegisteredBy", fields: [registeredByUserId], references: [id])
+  intakes                PatientTreatmentIntake[]
+
+  @@index([patientId, status])
+  @@index([medicationId])
+  @@index([registeredByUserId])
+  @@map("patient_treatments")
+}
+
+/** Tomas manuales de tratamientos personales, independientes del motor de recetas. */
+model PatientTreatmentIntake {
+  id                   Int                   @id @default(autoincrement())
+  patientTreatmentId   Int                   @map("patient_treatment_id")
+  recordedByUserId     Int                   @map("recorded_by_user_id")
+  status               TreatmentIntakeStatus
+  scheduledAt          DateTime?             @map("scheduled_at")
+  takenAt              DateTime?             @map("taken_at")
+  notes                String?
+  createdAt            DateTime              @default(now()) @map("created_at")
+
+  treatment            PatientTreatment      @relation(fields: [patientTreatmentId], references: [id])
+  recordedBy           User                  @relation("PatientTreatmentIntakeRecordedBy", fields: [recordedByUserId], references: [id])
+
+  @@index([patientTreatmentId, createdAt])
+  @@index([recordedByUserId])
+  @@map("patient_treatment_intakes")
+}
+
+enum TreatmentOrigin {
+  SELF_REPORTED
+  EXTERNAL_PRESCRIPTION
+}
+
+enum TreatmentStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum TreatmentIntakeStatus {
+  TAKEN
+  SKIPPED
 }
 
 // Enums
