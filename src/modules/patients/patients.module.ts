@@ -1,3 +1,4 @@
+import { PatientLinkInvitationsController } from './infrastructure/controllers/patient-link-invitations.controller';
 import { PatientLinksController } from './infrastructure/controllers/patient-links.controller';
 import { ManagePatientLinksUseCase } from './application/use-cases/manage-patient-links.use-case';
 import { PATIENT_LINKS_REPOSITORY } from './domain/interfaces/patient-links.repository';
@@ -23,6 +24,7 @@ import { UpdatePatientUseCase } from './application/use-cases/update-patient.use
   controllers: [
     PatientsController,
     PatientLinksController,
+    PatientLinkInvitationsController,
     PatientAgendaController,
   ],
   providers: [

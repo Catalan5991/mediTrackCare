@@ -87,6 +87,7 @@ model Patient {
   customMedications   Medication[] @relation("PatientCustomMedications")
   administrationSessions AdministrationSession[]
   medicalProfile PatientMedicalProfile?
+  linkInvitations PatientLinkInvitation[]
 
   @@map("patients")
 }
@@ -638,4 +639,18 @@ model Device {
 
   @@index([userId])
   @@map("devices")
+}
+
+model PatientLinkInvitation {
+ id Int @id @default(autoincrement())
+ patientId Int @map("patient_id")
+ kind String
+ tokenHash String @unique @map("token_hash")
+ expiresAt DateTime @map("expires_at")
+ claimedAt DateTime? @map("claimed_at")
+ claimedByUserId Int? @map("claimed_by_user_id")
+ createdAt DateTime @default(now()) @map("created_at")
+ patient Patient @relation(fields:[patientId],references:[id],onDelete:Cascade)
+ @@index([patientId,createdAt])
+ @@map("patient_link_invitations")
 }
