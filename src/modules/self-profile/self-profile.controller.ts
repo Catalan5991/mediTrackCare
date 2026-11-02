@@ -6,6 +6,10 @@ class PersonalDto {
  @IsOptional() @IsString() @MinLength(2) @MaxLength(120) name?:string;
  @IsOptional() @IsString() @MaxLength(30) phone?:string;
 }
+class EmergencyContactDto {
+ @IsString() @MaxLength(120) name!:string;
+ @IsString() @MaxLength(30) phone!:string;
+}
 class MedicalDto {
  @IsOptional() @IsIn(['A+','A-','B+','B-','AB+','AB-','O+','O-','UNKNOWN']) bloodType?:string|null;
  @IsOptional() @IsString() @MaxLength(2000) allergies?:string|null;
@@ -19,7 +23,7 @@ export class SelfProfileController {
  async get(@Req() req:{user:{id:number}}){
   const u=await this.prisma.user.findUnique({where:{id:req.user.id},select:{
    id:true,name:true,email:true,phone:true,
-   patientProfile:{select:{id:true,medicalProfile:true}}
+   patientProfile:{select:{id:true,medicalProfile:true,emergencyContactName:true,emergencyContactPhone:true}}
   }});
   if(!u)throw new BadRequestException('Usuario no encontrado');
   return u;
@@ -34,6 +38,18 @@ export class SelfProfileController {
    if(name!==undefined)await tx.patient.updateMany({where:{userId:req.user.id},data:{fullName:name.trim()}});
    return u;
   });
+ }
+ @Patch('emergency-contact')
+ async emergencyContact(@Req() req:{user:{id:number}},@Body() dto:EmergencyContactDto){
+  await validateOrReject(Object.assign(new EmergencyContactDto(),dto)).catch(()=>{throw new BadRequestException('Contacto de emergencia inválido.');});
+  const name=dto.name?.trim(),phone=dto.phone?.trim();
+  if(!!name!==!!phone)throw new BadRequestException('Indica tanto el nombre como el teléfono, o deja ambos vacíos.');
+  if(name&&name.length<2)throw new BadRequestException('El nombre debe tener al menos dos caracteres.');
+  if(phone&&!/^\\+?[0-9()\\s-]{7,30}$/.test(phone))throw new BadRequestException('Verifica el teléfono del contacto de emergencia.');
+  const result=await this.prisma.patient.updateMany({where:{userId:req.user.id,isActive:true},
+    data:{emergencyContactName:name||null,emergencyContactPhone:phone||null}});
+  if(!result.count)throw new BadRequestException('Solo los pacientes pueden editar su contacto de emergencia.');
+  return {emergencyContactName:name||null,emergencyContactPhone:phone||null};
  }
  @Patch('medical')
  async medical(@Req() req:{user:{id:number}},@Body() dto:MedicalDto){
