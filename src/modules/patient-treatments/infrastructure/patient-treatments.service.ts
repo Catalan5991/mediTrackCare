@@ -139,7 +139,7 @@ export class PatientTreatmentsService {
         treatmentIds.push(createdTreatment.id);
       }
       await tx.auditLog.create({data:{userId:actor.id,module:'patient-treatments',action:'CREATE',
-        entityName:'ExternalConsultation',entityId:consultation.id,description:JSON.stringify({patientId:input.patientId,treatments:treatments.length})}});
+        entityName:'ExternalConsultation',entityId:consultation.id,description:JSON.stringify({patientId:input.patientId,treatments:treatmentIds.length})}});
       return {consultationId:consultation.id,treatmentIds,count:treatmentIds.length};
     });
   }
