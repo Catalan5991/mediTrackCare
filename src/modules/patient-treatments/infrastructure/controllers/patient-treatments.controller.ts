@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreatePatientTreatmentDto, UpdatePatientTreatmentDto, RecordTreatmentIntakeDto } from '../../application/treatment.dto';
+import { CreateExternalConsultationDto } from '../../application/external-consultation.dto';
 import { PatientTreatmentsService } from '../patient-treatments.service';
 
 @ApiTags('Patient treatments') @ApiBearerAuth()
@@ -9,6 +10,8 @@ export class PatientTreatmentsController {
   constructor(private readonly service:PatientTreatmentsService){}
   @Post() @ApiOperation({summary:'Registrar tratamiento personal o receta externa (sin validación médica)'})
   create(@Body() dto:CreatePatientTreatmentDto){return this.service.create(dto);}
+  @Post('external-consultations') @ApiOperation({summary:'Registrar consulta externa y sus N medicamentos en una transacción'})
+  createConsultation(@Body() dto:CreateExternalConsultationDto){return this.service.createConsultation(dto);}
   @Get() @ApiOperation({summary:'Listar tratamientos de un paciente autorizado'})
   list(@Query('patientId',ParseIntPipe) patientId:number){return this.service.list(patientId);}
   @Get(':id') findOne(@Param('id',ParseIntPipe) id:number){return this.service.findOne(id);}
