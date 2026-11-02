@@ -14,6 +14,8 @@ export class PatientTreatmentsController {
   @Get(':id') findOne(@Param('id',ParseIntPipe) id:number){return this.service.findOne(id);}
   @Patch(':id') @ApiOperation({summary:'Editar o cambiar estado de tratamiento personal'})
   update(@Param('id',ParseIntPipe) id:number,@Body() dto:UpdatePatientTreatmentDto){return this.service.update(id,dto);}
+  @Get('agenda/day') @ApiOperation({summary:'Tomas programadas de seguimientos personales'})
+  agenda(@Query('patientId',ParseIntPipe) patientId:number,@Query('date') date:string){return this.service.agenda(patientId,date);}
   @Post(':id/intakes') @ApiOperation({summary:'Registrar toma manual; no genera un recordatorio automático'})
   record(@Param('id',ParseIntPipe) id:number,@Body() dto:RecordTreatmentIntakeDto){return this.service.record(id,dto);}
   @Get(':id/intakes') history(@Param('id',ParseIntPipe) id:number){return this.service.history(id);}

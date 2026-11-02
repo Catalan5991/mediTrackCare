@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { PrismaService } from '../../prisma/prisma.service';
 import { PatientAccessService } from '../../../common/authorization/patient-access.service';
 import { CreatePatientTreatmentDto, UpdatePatientTreatmentDto, RecordTreatmentIntakeDto } from '../application/treatment.dto';
+import { localDate, localInstant, addDays } from '../../prescriptions/domain/schedule';
 import { TreatmentOrigin, TreatmentIntakeStatus } from '../../../../generated/prisma/client';
 
 @Injectable()
@@ -101,6 +102,31 @@ export class PatientTreatmentsService {
       return changed;
     });
   }
+
+  private slots(t: {startDate:Date|null;endDate:Date|null;scheduledTimes:string[];daysOfWeek:number[];timeZone:string}, date:string) {
+    const start=t.startDate?.toISOString().slice(0,10), end=t.endDate?.toISOString().slice(0,10);
+    if(!start || date<start || (end && date>end))return [];
+    const weekday=new Date(date+'T00:00:00Z').getUTCDay();
+    if(t.daysOfWeek.length && !t.daysOfWeek.includes(weekday))return [];
+    return t.scheduledTimes.map(time=>localInstant(date,time,t.timeZone)).filter((d):d is Date=>!!d).sort((a,b)=>a.getTime()-b.getTime());
+  }
+  async agenda(patientId:number,date:string) {
+    await this.authorize(patientId);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(date+'T00:00:00Z')) ||
+       new Date(date+'T00:00:00Z').toISOString().slice(0,10)!==date) throw new BadRequestException('Fecha inválida.');
+    const treatments=await this.prisma.patientTreatment.findMany({where:{patientId},include:{medication:true,intakes:true}});
+    const now=new Date();
+    const data=treatments.flatMap(t => this.slots(t,date).map(at=>{
+      const found=t.intakes.find(row=>row.scheduledAt?.getTime()===at.getTime());
+      const future=[...this.slots(t,date),...this.slots(t,addDays(date,1))].find(next=>next>at);
+      const status=found?.status==='TAKEN'?'TOMADA':found?.status==='SKIPPED'?'OMITIDA':
+        t.status!=='ACTIVE'?'CANCELADA':future&&future<=now?'VENCIDA_SIN_CONFIRMAR':at<=now?'RETRASADA':'PENDIENTE';
+      return {treatmentId:t.id,occurrenceKey:'personal:'+t.id+':'+at.toISOString(),scheduledAt:at,
+        medication:t.medication,dose:t.dose,frequency:t.frequency,status,takenAt:found?.takenAt??null,origin:t.origin};
+    })).sort((a,b)=>a.scheduledAt.getTime()-b.scheduledAt.getTime());
+    return {patientId,date,data,total:data.length};
+  }
+
   async record(id:number,dto:RecordTreatmentIntakeDto) {
     const item=await this.get(id);
     await this.authorize(item.patientId,'track');
@@ -111,10 +137,19 @@ export class PatientTreatmentsService {
       throw new BadRequestException('La hora de toma es inválida.');
     if(dto.status===TreatmentIntakeStatus.SKIPPED&&dto.takenAt)
       throw new BadRequestException('Una toma omitida no tiene hora de administración.');
-    const scheduledAt=dto.scheduledAt?new Date(dto.scheduledAt):null;
+    if(!dto.scheduledAt)throw new BadRequestException('Selecciona un horario programado.');
+    const scheduledAt=new Date(dto.scheduledAt);
     if(scheduledAt && (!Number.isFinite(scheduledAt.getTime()) || scheduledAt>now))
       throw new BadRequestException('No se pueden confirmar horarios futuros o inválidos.');
+    const day=localDate(scheduledAt,item.timeZone);
+    if(!this.slots(item,day).some(at=>at.getTime()===scheduledAt.getTime()))
+      throw new BadRequestException('La toma no corresponde a un horario programado.');
+    const following=[...this.slots(item,day),...this.slots(item,addDays(day,1))].find(at=>at>scheduledAt);
+    if(following && following<=now)throw new BadRequestException('La toma anterior venció sin confirmación. No se puede confirmar junto con la siguiente.');
     return this.prisma.$transaction(async tx=>{
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(880, ${id})`;
+      const existing=await tx.patientTreatmentIntake.findFirst({where:{patientTreatmentId:id,scheduledAt}});
+      if(existing)throw new BadRequestException('Esta toma ya se registró.');
       const row=await tx.patientTreatmentIntake.create({data:{
         patientTreatmentId:id,recordedByUserId:this.access.actor().id,status:dto.status,
         scheduledAt,takenAt,notes:dto.notes,
