@@ -86,8 +86,21 @@ model Patient {
   personalTreatments  PatientTreatment[]
   customMedications   Medication[] @relation("PatientCustomMedications")
   administrationSessions AdministrationSession[]
+  medicalProfile PatientMedicalProfile?
 
   @@map("patients")
+}
+
+model PatientMedicalProfile {
+ id Int @id @default(autoincrement())
+ patientId Int @unique @map("patient_id")
+ bloodType String? @map("blood_type")
+ allergies String? @db.Text
+ conditions String? @db.Text
+ medicalNotes String? @db.Text @map("medical_notes")
+ updatedAt DateTime @updatedAt @map("updated_at")
+ patient Patient @relation(fields:[patientId],references:[id],onDelete:Cascade)
+ @@map("patient_medical_profiles")
 }
 
 model Doctor {
