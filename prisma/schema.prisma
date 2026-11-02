@@ -84,6 +84,7 @@ model Patient {
   files               File[]
   doctorAssignments   DoctorPatient[]
   personalTreatments  PatientTreatment[]
+  customMedications   Medication[] @relation("PatientCustomMedications")
 
   @@map("patients")
 }
@@ -147,10 +148,13 @@ model Medication {
   createdAt     DateTime        @default(now()) @map("created_at")
   updatedAt     DateTime        @updatedAt @map("updated_at")
 
+  ownerPatientId Int? @map("owner_patient_id")
+  ownerPatient Patient? @relation("PatientCustomMedications",fields:[ownerPatientId],references:[id])
   prescriptionItems PrescriptionItem[]
   files             File[]
   personalTreatments PatientTreatment[]
 
+  @@index([ownerPatientId])
   @@map("medications")
 }
 
@@ -382,11 +386,32 @@ model PatientTreatment {
   medication             Medication       @relation(fields: [medicationId], references: [id])
   registeredBy           User             @relation("PatientTreatmentRegisteredBy", fields: [registeredByUserId], references: [id])
   intakes                PatientTreatmentIntake[]
+  consultationId         Int?             @map("consultation_id")
+  consultation           ExternalConsultation? @relation(fields: [consultationId], references: [id])
+
 
   @@index([patientId, status])
   @@index([medicationId])
+  @@index([consultationId])
   @@index([registeredByUserId])
   @@map("patient_treatments")
+}
+
+/** Consulta y receta externa transcrita. No equivale a una prescripción verificada. */
+model ExternalConsultation {
+  id               Int       @id @default(autoincrement())
+  patientId        Int       @map("patient_id")
+  registeredByUserId Int     @map("registered_by_user_id")
+  visitDate        DateTime  @db.Date @map("visit_date")
+  doctorName       String    @map("doctor_name")
+  specialty        String?
+  clinic           String?
+  nextVisitDate    DateTime? @db.Date @map("next_visit_date")
+  notes            String?
+  createdAt        DateTime  @default(now()) @map("created_at")
+  treatments       PatientTreatment[]
+  @@index([patientId, createdAt])
+  @@map("external_consultations")
 }
 
 /** Tomas manuales de tratamientos personales, independientes del motor de recetas. */

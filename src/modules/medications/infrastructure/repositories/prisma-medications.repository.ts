@@ -87,6 +87,7 @@ export class PrismaMedicationsRepository implements MedicationsRepository {
 
     const where: Prisma.MedicationWhereInput = {
       isActive: params?.isActive,
+      ownerPatientId: null,
       OR: orConditions.length > 0 ? orConditions : undefined,
     };
 
@@ -172,7 +173,7 @@ export class PrismaMedicationsRepository implements MedicationsRepository {
       where: { id },
     });
 
-    if (!medication) {
+    if (!medication || medication.ownerPatientId !== null) {
       return null;
     }
 
