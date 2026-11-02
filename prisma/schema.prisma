@@ -85,6 +85,7 @@ model Patient {
   doctorAssignments   DoctorPatient[]
   personalTreatments  PatientTreatment[]
   customMedications   Medication[] @relation("PatientCustomMedications")
+  administrationSessions AdministrationSession[]
 
   @@map("patients")
 }
@@ -153,6 +154,7 @@ model Medication {
   prescriptionItems PrescriptionItem[]
   files             File[]
   personalTreatments PatientTreatment[]
+  sessionComponents AdministrationComponent[]
 
   @@index([ownerPatientId])
   @@map("medications")
@@ -414,6 +416,57 @@ model ExternalConsultation {
   @@map("external_consultations")
 }
 
+enum AdministrationKind {
+  INJECTION
+  NEBULIZATION
+  INHALER
+}
+model AdministrationSession {
+  id Int @id @default(autoincrement())
+  patientId Int @map("patient_id")
+  createdByUserId Int @map("created_by_user_id")
+  kind AdministrationKind
+  label String
+  origin TreatmentOrigin @default(SELF_REPORTED)
+  instructions String?
+  notes String?
+  startDate DateTime @db.Date @map("start_date")
+  endDate DateTime? @db.Date @map("end_date")
+  scheduledTimes String[] @default([]) @map("scheduled_times")
+  daysOfWeek Int[] @default([]) @map("days_of_week")
+  timeZone String @map("time_zone")
+  isActive Boolean @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  patient Patient @relation(fields:[patientId], references:[id])
+  components AdministrationComponent[]
+  intakes AdministrationSessionIntake[]
+  @@index([patientId,isActive])
+  @@map("administration_sessions")
+}
+model AdministrationComponent {
+  id Int @id @default(autoincrement())
+  sessionId Int @map("session_id")
+  medicationId Int @map("medication_id")
+  dose String
+  doseUnit String
+  instructions String?
+  session AdministrationSession @relation(fields:[sessionId],references:[id])
+  medication Medication @relation(fields:[medicationId],references:[id])
+  @@index([sessionId])
+  @@map("administration_components")
+}
+model AdministrationSessionIntake {
+  id Int @id @default(autoincrement())
+  sessionId Int @map("session_id")
+  scheduledAt DateTime @map("scheduled_at")
+  status TreatmentIntakeStatus
+  takenAt DateTime? @map("taken_at")
+  recordedByUserId Int @map("recorded_by_user_id")
+  notes String?
+  session AdministrationSession @relation(fields:[sessionId],references:[id])
+  @@unique([sessionId,scheduledAt])
+  @@map("administration_session_intakes")
+}
 /** Tomas manuales de tratamientos personales, independientes del motor de recetas. */
 model PatientTreatmentIntake {
   id                   Int                   @id @default(autoincrement())
