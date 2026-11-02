@@ -43,7 +43,7 @@ export class PatientTreatmentsService {
     if(this.access.actor().role.toUpperCase()==='DOCTOR')throw new ForbiddenException();
     const name=input.name?.trim();
     if(!name||name.length<2||name.length>100||!Object.values(MedicationForm).includes(input.presentation)||
-      !Object.values(MedicationRoute).includes(input.route)||input.concentration?.length>80||input.unit?.length>50)
+      !Object.values(MedicationRoute).includes(input.route)||(input.concentration?.length ?? 0)>80||(input.unit?.length ?? 0)>50)
       throw new BadRequestException('Completa los datos del medicamento.');
     return this.prisma.$transaction(async tx=>{
       await this.access.assert(patientId,'reminders',tx);
@@ -125,9 +125,9 @@ export class PatientTreatmentsService {
         doctorName:input.doctorName.trim(),specialty:input.specialty?.trim(),clinic:input.clinic?.trim(),
         nextVisitDate:input.nextVisitDate?new Date(input.nextVisitDate):undefined,notes:input.notes?.trim()
       }});
-      const treatments=[];
+      const treatmentIds:number[]=[];
       for(const med of input.medications) {
-        treatments.push(await tx.patientTreatment.create({data:{
+        const createdTreatment=await tx.patientTreatment.create({data:{
           patientId:input.patientId,registeredByUserId:actor.id,consultationId:consultation.id,
           medicationId:med.medicationId,origin:'EXTERNAL_PRESCRIPTION',
           externalPrescriberName:input.doctorName.trim(),externalPrescriptionDate:new Date(input.visitDate),
@@ -135,11 +135,12 @@ export class PatientTreatmentsService {
           startDate:new Date(med.startDate),endDate:med.endDate?new Date(med.endDate):undefined,
           scheduledTimes:med.scheduledTimes,daysOfWeek:med.daysOfWeek??[],instructions:med.instructions,
           timeZone:patient.timeZone
-        }}));
+        }});
+        treatmentIds.push(createdTreatment.id);
       }
       await tx.auditLog.create({data:{userId:actor.id,module:'patient-treatments',action:'CREATE',
         entityName:'ExternalConsultation',entityId:consultation.id,description:JSON.stringify({patientId:input.patientId,treatments:treatments.length})}});
-      return {consultationId:consultation.id,treatmentIds:treatments.map(x=>x.id),count:treatments.length};
+      return {consultationId:consultation.id,treatmentIds,count:treatmentIds.length};
     });
   }
 
