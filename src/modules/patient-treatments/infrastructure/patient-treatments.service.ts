@@ -145,7 +145,7 @@ export class PatientTreatmentsService {
     if(!this.slots(item,day).some(at=>at.getTime()===scheduledAt.getTime()))
       throw new BadRequestException('La toma no corresponde a un horario programado.');
     const following=[...this.slots(item,day),...this.slots(item,addDays(day,1))].find(at=>at>scheduledAt);
-    if(following && following<=now)throw new BadRequestException('La toma anterior venció sin confirmación. No se puede confirmar junto con la siguiente.');
+    if(dto.status===TreatmentIntakeStatus.TAKEN && following && following<=now)throw new BadRequestException('Esta toma venció sin confirmación al comenzar el siguiente horario. No se pueden confirmar ambas.');
     return this.prisma.$transaction(async tx=>{
       await tx.$queryRaw`SELECT pg_advisory_xact_lock(880, ${id})`;
       const existing=await tx.patientTreatmentIntake.findFirst({where:{patientTreatmentId:id,scheduledAt}});
@@ -154,6 +154,7 @@ export class PatientTreatmentsService {
         patientTreatmentId:id,recordedByUserId:this.access.actor().id,status:dto.status,
         scheduledAt,takenAt,notes:dto.notes,
       }});
+      await tx.notification.updateMany({where:{deduplicationKey:{startsWith:'personal:'+id+':'+scheduledAt.toISOString()+':'},status:'PENDIENTE'},data:{cancelledAt:new Date()}});
       await tx.auditLog.create({data:{userId:this.access.actor().id,module:'patient-treatments',action:'INTAKE',
         entityName:'PatientTreatmentIntake',entityId:row.id,description:JSON.stringify({treatmentId:id,status:row.status})}});
       return row;
