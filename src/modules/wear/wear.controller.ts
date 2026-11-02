@@ -58,6 +58,21 @@ class WearService {
     });
     return { status: 'linked', deviceId: device.id, token };
   }
+  async treatments(token: string | undefined) {
+    const access = await this.check(token);
+    const patient = await this.db.patient.findUnique({ where: { userId: access.userId } });
+    if (!patient || !patient.isActive) throw new ForbiddenException('Paciente no disponible.');
+    return this.db.patientTreatment.findMany({
+      where: { patientId: patient.id, status: 'ACTIVE' },
+      select: {
+        id: true, dose: true, doseUnit: true, frequency: true,
+        scheduledTimes: true, timeZone: true, instructions: true,
+        medication: { select: { name: true, concentration: true, unit: true } },
+      },
+      orderBy: { id: 'asc' },
+      take: 50,
+    });
+  }
   async list(user: UserContext) {
     return this.db.wearDevice.findMany({
       where: { userId: user.id, revokedAt: null },
@@ -89,6 +104,9 @@ export class WearController {
   }
   @Public() @Post('pairing/exchange') exchange(@Body() data: ExchangeDto) {
     return this.service.exchange(data.sessionId, data.secret);
+  }
+  @Public() @Get('treatments') treatments(@Headers('x-wear-token') token?: string) {
+    return this.service.treatments(token);
   }
   @Get('devices') list(@CurrentUser() user: UserContext) { return this.service.list(user); }
   @Delete('devices/:id') revoke(@Param('id') id: string, @CurrentUser() user: UserContext) {
