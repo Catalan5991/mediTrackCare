@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { PatientAccessService } from '../../../common/authorization/patient-access.service';
 import { CreatePatientTreatmentDto, UpdatePatientTreatmentDto, RecordTreatmentIntakeDto } from '../application/treatment.dto';
 import { localDate, localInstant, addDays } from '../../prescriptions/domain/schedule';
+import { MedicationForm, MedicationRoute } from '../../../../generated/prisma/client';
 import { TreatmentOrigin, TreatmentIntakeStatus } from '../../../../generated/prisma/client';
 
 @Injectable()
@@ -32,6 +33,31 @@ export class PatientTreatmentsService {
     if(!item)throw new NotFoundException('Tratamiento no encontrado.');
     return item;
   }
+  async customMedications(patientId:number,search='') {
+    await this.authorize(patientId);
+    return this.prisma.medication.findMany({where:{ownerPatientId:patientId,isActive:true,
+      name:{contains:search.trim(),mode:'insensitive'}},orderBy:{name:'asc'},take:50});
+  }
+  async createCustomMedication(patientId:number,input:{name:string;presentation:MedicationForm;route:MedicationRoute;concentration?:string;unit?:string}) {
+    await this.authorize(patientId,'reminders');
+    if(this.access.actor().role.toUpperCase()==='DOCTOR')throw new ForbiddenException();
+    const name=input.name?.trim();
+    if(!name||name.length<2||name.length>100||!Object.values(MedicationForm).includes(input.presentation)||
+      !Object.values(MedicationRoute).includes(input.route)||input.concentration?.length>80||input.unit?.length>50)
+      throw new BadRequestException('Completa los datos del medicamento.');
+    return this.prisma.$transaction(async tx=>{
+      await this.access.assert(patientId,'reminders',tx);
+      const existing=await tx.medication.findFirst({where:{ownerPatientId:patientId,
+        name:{equals:name,mode:'insensitive'},presentation:input.presentation,concentration:input.concentration||null,
+        route:input.route,isActive:true}});
+      if(existing)return existing;
+      const created=await tx.medication.create({data:{ownerPatientId:patientId,name,presentation:input.presentation,
+        route:input.route,concentration:input.concentration?.trim()||null,unit:input.unit?.trim()||null}});
+      await tx.auditLog.create({data:{userId:this.access.actor().id,module:'medications',action:'CREATE',
+        entityName:'Medication',entityId:created.id,description:JSON.stringify({patientId,scope:'PRIVATE'})}});
+      return created;
+    });
+  }
   async create(dto:CreatePatientTreatmentDto) {
     this.verify(dto);
     // Only owners or explicitly authorized caregivers can add personal/external treatment records.
@@ -40,7 +66,7 @@ export class PatientTreatmentsService {
     await this.authorize(dto.patientId,'reminders');
     return this.prisma.$transaction(async tx=>{
       const patient=await tx.patient.findUnique({where:{id:dto.patientId}});
-      const medication=await tx.medication.findFirst({where:{id:dto.medicationId,isActive:true}});
+      const medication=await tx.medication.findFirst({where:{id:dto.medicationId,isActive:true,OR:[{ownerPatientId:null},{ownerPatientId:dto.patientId}]}});
       if(!patient?.isActive||!medication)throw new BadRequestException('Paciente o medicamento inexistente o inactivo.');
       const result=await tx.patientTreatment.create({data:{
         patientId:dto.patientId, medicationId:dto.medicationId, registeredByUserId:this.access.actor().id,
@@ -58,6 +84,65 @@ export class PatientTreatmentsService {
       return result;
     });
   }
+
+  async createConsultation(input: {
+    patientId:number; visitDate:string; doctorName:string; specialty?:string; clinic?:string;
+    nextVisitDate?:string; notes?:string; medications: Array<{
+      medicationId:number;dose:string;doseUnit?:string;frequency:string;startDate:string;endDate?:string;
+      scheduledTimes:string[];daysOfWeek?:number[];instructions?:string;
+    }>;
+  }) {
+    if(this.access.actor().role.toUpperCase()==='DOCTOR')
+      throw new ForbiddenException('Este flujo es para transcribir recetas externas, no emitir prescripciones verificadas.');
+    await this.authorize(input.patientId,'reminders');
+    const validDate=(s:string)=>/^\d{4}-\d{2}-\d{2}$/.test(s)&&!Number.isNaN(Date.parse(s+'T00:00:00Z'))&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s;
+    if(!validDate(input.visitDate)||!input.doctorName?.trim()||input.doctorName.length>120||
+       input.nextVisitDate&&!validDate(input.nextVisitDate)||input.notes&&input.notes.length>1000||
+       input.clinic&&input.clinic.length>120||input.specialty&&input.specialty.length>120)
+      throw new BadRequestException('Revisa los datos de la consulta y sus fechas.');
+    if(!Array.isArray(input.medications)||!input.medications.length||input.medications.length>30)
+      throw new BadRequestException('La receta necesita entre 1 y 30 medicamentos.');
+    for(const m of input.medications) {
+      if(!m.dose?.trim()||!m.frequency?.trim()||!validDate(m.startDate)||
+         m.endDate&&(!validDate(m.endDate)||m.endDate<m.startDate)||
+         !Number.isSafeInteger(m.medicationId)||m.medicationId<1||
+         !Array.isArray(m.scheduledTimes)||!m.scheduledTimes.length||
+         m.scheduledTimes.length>24||new Set(m.scheduledTimes).size!==m.scheduledTimes.length||
+         m.scheduledTimes.some(t=>!/^([01]\d|2[0-3]):[0-5]\d$/.test(t))||
+         (m.daysOfWeek??[]).some(d=>!Number.isInteger(d)||d<0||d>6))
+        throw new BadRequestException('Revisa dosis, frecuencia, fecha de inicio y horarios de todos los medicamentos.');
+    }
+    const actor=this.access.actor();
+    return this.prisma.$transaction(async tx=>{
+      await this.access.assert(input.patientId,'reminders',tx);
+      const patient=await tx.patient.findFirst({where:{id:input.patientId,isActive:true}});
+      if(!patient)throw new BadRequestException('Paciente no disponible.');
+      const ids=[...new Set(input.medications.map(m=>m.medicationId))];
+      const catalog=await tx.medication.findMany({where:{id:{in:ids},isActive:true,OR:[{ownerPatientId:null},{ownerPatientId:input.patientId}]},select:{id:true}});
+      if(catalog.length!==ids.length)throw new BadRequestException('Hay medicamentos inexistentes o inactivos.');
+      const consultation=await tx.externalConsultation.create({data:{
+        patientId:input.patientId,registeredByUserId:actor.id,visitDate:new Date(input.visitDate),
+        doctorName:input.doctorName.trim(),specialty:input.specialty?.trim(),clinic:input.clinic?.trim(),
+        nextVisitDate:input.nextVisitDate?new Date(input.nextVisitDate):undefined,notes:input.notes?.trim()
+      }});
+      const treatments=[];
+      for(const med of input.medications) {
+        treatments.push(await tx.patientTreatment.create({data:{
+          patientId:input.patientId,registeredByUserId:actor.id,consultationId:consultation.id,
+          medicationId:med.medicationId,origin:'EXTERNAL_PRESCRIPTION',
+          externalPrescriberName:input.doctorName.trim(),externalPrescriptionDate:new Date(input.visitDate),
+          dose:med.dose.trim(),doseUnit:med.doseUnit,frequency:med.frequency.trim(),
+          startDate:new Date(med.startDate),endDate:med.endDate?new Date(med.endDate):undefined,
+          scheduledTimes:med.scheduledTimes,daysOfWeek:med.daysOfWeek??[],instructions:med.instructions,
+          timeZone:patient.timeZone
+        }}));
+      }
+      await tx.auditLog.create({data:{userId:actor.id,module:'patient-treatments',action:'CREATE',
+        entityName:'ExternalConsultation',entityId:consultation.id,description:JSON.stringify({patientId:input.patientId,treatments:treatments.length})}});
+      return {consultationId:consultation.id,treatmentIds:treatments.map(x=>x.id),count:treatments.length};
+    });
+  }
+
   async list(patientId:number) {
     await this.authorize(patientId);
     return this.prisma.patientTreatment.findMany({where:{patientId},include:{medication:true},
