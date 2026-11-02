@@ -3,7 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { PatientAccessService } from '../../../common/authorization/patient-access.service';
 import { CreatePatientTreatmentDto, UpdatePatientTreatmentDto, RecordTreatmentIntakeDto } from '../application/treatment.dto';
 import { localDate, localInstant, addDays } from '../../prescriptions/domain/schedule';
-import { MedicationForm, MedicationRoute } from '../../../../generated/prisma/client';
+import { AdministrationKind, MedicationForm, MedicationRoute } from '../../../../generated/prisma/client';
 import { TreatmentOrigin, TreatmentIntakeStatus } from '../../../../generated/prisma/client';
 
 @Injectable()
@@ -33,6 +33,71 @@ export class PatientTreatmentsService {
     if(!item)throw new NotFoundException('Tratamiento no encontrado.');
     return item;
   }
+
+  async createAdministration(input:{
+    patientId:number;kind:AdministrationKind;label:string;origin?:TreatmentOrigin;
+    instructions?:string;notes?:string;startDate:string;endDate?:string;
+    scheduledTimes:string[];daysOfWeek?:number[];
+    components:{medicationId:number;dose:string;doseUnit:string;instructions?:string}[];
+  }) {
+    if(this.access.actor().role.toUpperCase()==='DOCTOR')throw new ForbiddenException('Este registro no emite una receta clínica verificada.');
+    await this.authorize(input.patientId,'reminders');
+    if(!Object.values(AdministrationKind).includes(input.kind)||!input.label?.trim()||input.label.length>120||
+      !/^\\d{4}-\\d{2}-\\d{2}$/.test(input.startDate)||!Number.isFinite(Date.parse(input.startDate))||
+      (input.endDate&&(!/^\\d{4}-\\d{2}-\\d{2}$/.test(input.endDate)||input.endDate<input.startDate))||
+      !Array.isArray(input.scheduledTimes)||!input.scheduledTimes.length||input.scheduledTimes.length>24||
+      new Set(input.scheduledTimes).size!==input.scheduledTimes.length||
+      input.scheduledTimes.some(t=>!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(t))||
+      (input.daysOfWeek??[]).some(d=>!Number.isInteger(d)||d<0||d>6)||
+      !Array.isArray(input.components)||!input.components.length||input.components.length>10||
+      input.components.some(c=>!Number.isSafeInteger(c.medicationId)||c.medicationId<1||
+        !c.dose?.trim()||!c.doseUnit?.trim()||c.dose.length>100||c.doseUnit.length>50))
+      throw new BadRequestException('Revisa componentes, dosis y programación de la sesión.');
+    return this.prisma.$transaction(async tx=>{
+      await this.access.assert(input.patientId,'reminders',tx);
+      const patient=await tx.patient.findFirst({where:{id:input.patientId,isActive:true}});
+      if(!patient)throw new BadRequestException('Paciente no disponible.');
+      const ids=[...new Set(input.components.map(c=>c.medicationId))];
+      const available=await tx.medication.count({where:{id:{in:ids},isActive:true,OR:[{ownerPatientId:null},{ownerPatientId:input.patientId}]}});
+      if(available!==ids.length)throw new BadRequestException('Uno o más medicamentos no pertenecen a este paciente.');
+      const session=await tx.administrationSession.create({data:{
+        patientId:input.patientId,createdByUserId:this.access.actor().id,kind:input.kind,
+        label:input.label.trim(),origin:input.origin??TreatmentOrigin.SELF_REPORTED,
+        instructions:input.instructions,notes:input.notes,startDate:new Date(input.startDate),
+        endDate:input.endDate?new Date(input.endDate):undefined,scheduledTimes:input.scheduledTimes,
+        daysOfWeek:input.daysOfWeek??[],timeZone:patient.timeZone,
+        components:{create:input.components.map(c=>({medicationId:c.medicationId,dose:c.dose,doseUnit:c.doseUnit,instructions:c.instructions}))}
+      },include:{components:{include:{medication:true}}}});
+      await tx.auditLog.create({data:{userId:this.access.actor().id,module:'patient-treatments',action:'CREATE',
+        entityName:'AdministrationSession',entityId:session.id,description:JSON.stringify({patientId:input.patientId,kind:input.kind})}});
+      return session;
+    });
+  }
+  async listAdministrations(patientId:number) {
+    await this.authorize(patientId);
+    return this.prisma.administrationSession.findMany({where:{patientId},include:{components:{include:{medication:true}}},orderBy:{createdAt:'desc'},take:100});
+  }
+  async recordAdministration(id:number,input:{scheduledAt:string;status:TreatmentIntakeStatus;notes?:string}) {
+    const session=await this.prisma.administrationSession.findUnique({where:{id}});
+    if(!session)throw new NotFoundException('Sesión no encontrada.');
+    await this.authorize(session.patientId,'track');
+    if(!session.isActive||!['TAKEN','SKIPPED'].includes(input.status)||!input.scheduledAt)
+      throw new BadRequestException('Sesión o estado no válido.');
+    const at=new Date(input.scheduledAt),now=new Date();
+    if(!Number.isFinite(at.getTime())||at>now)throw new BadRequestException('No se admiten horarios futuros.');
+    const day=localDate(at,session.timeZone);
+    const weekdays=new Date(day+'T00:00:00Z').getUTCDay();
+    const valid=day>=session.startDate.toISOString().slice(0,10)&&
+      (!session.endDate||day<=session.endDate.toISOString().slice(0,10))&&
+      (!session.daysOfWeek.length||session.daysOfWeek.includes(weekdays))&&
+      session.scheduledTimes.some(t=>localInstant(day,t,session.timeZone)?.getTime()===at.getTime());
+    if(!valid)throw new BadRequestException('Horario no programado en esta sesión.');
+    return this.prisma.administrationSessionIntake.create({data:{
+      sessionId:id,scheduledAt:at,status:input.status,recordedByUserId:this.access.actor().id,
+      takenAt:input.status==='TAKEN'?now:null,notes:input.notes
+    }});
+  }
+
   async customMedications(patientId:number,search='') {
     await this.authorize(patientId);
     return this.prisma.medication.findMany({where:{ownerPatientId:patientId,isActive:true,
