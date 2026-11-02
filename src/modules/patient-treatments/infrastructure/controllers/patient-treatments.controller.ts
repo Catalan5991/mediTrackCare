@@ -2,12 +2,17 @@ import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query } from '
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreatePatientTreatmentDto, UpdatePatientTreatmentDto, RecordTreatmentIntakeDto } from '../../application/treatment.dto';
 import { CreateExternalConsultationDto } from '../../application/external-consultation.dto';
+import { CreateMedicationDto } from '../../../medications/application/dtos/create-medication.dto';
 import { PatientTreatmentsService } from '../patient-treatments.service';
 
 @ApiTags('Patient treatments') @ApiBearerAuth()
 @Controller('patient-treatments')
 export class PatientTreatmentsController {
   constructor(private readonly service:PatientTreatmentsService){}
+  @Get('custom-medications') @ApiOperation({summary:'Medicamentos privados del paciente autorizado'})
+  customList(@Query('patientId',ParseIntPipe) patientId:number,@Query('search') search?:string){return this.service.customMedications(patientId,search);}
+  @Post('custom-medications') @ApiOperation({summary:'Crear medicamento privado para el paciente'})
+  customCreate(@Query('patientId',ParseIntPipe) patientId:number,@Body() dto:CreateMedicationDto){return this.service.createCustomMedication(patientId,dto);}
   @Post() @ApiOperation({summary:'Registrar tratamiento personal o receta externa (sin validación médica)'})
   create(@Body() dto:CreatePatientTreatmentDto){return this.service.create(dto);}
   @Post('external-consultations') @ApiOperation({summary:'Registrar consulta externa y sus N medicamentos en una transacción'})

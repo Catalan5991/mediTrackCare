@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { PatientAccessService } from '../../../common/authorization/patient-access.service';
 import { CreatePatientTreatmentDto, UpdatePatientTreatmentDto, RecordTreatmentIntakeDto } from '../application/treatment.dto';
 import { localDate, localInstant, addDays } from '../../prescriptions/domain/schedule';
+import { MedicationForm, MedicationRoute } from '../../../../generated/prisma/client';
 import { TreatmentOrigin, TreatmentIntakeStatus } from '../../../../generated/prisma/client';
 
 @Injectable()
@@ -32,6 +33,31 @@ export class PatientTreatmentsService {
     if(!item)throw new NotFoundException('Tratamiento no encontrado.');
     return item;
   }
+  async customMedications(patientId:number,search='') {
+    await this.authorize(patientId);
+    return this.prisma.medication.findMany({where:{ownerPatientId:patientId,isActive:true,
+      name:{contains:search.trim(),mode:'insensitive'}},orderBy:{name:'asc'},take:50});
+  }
+  async createCustomMedication(patientId:number,input:{name:string;presentation:MedicationForm;route:MedicationRoute;concentration?:string;unit?:string}) {
+    await this.authorize(patientId,'reminders');
+    if(this.access.actor().role.toUpperCase()==='DOCTOR')throw new ForbiddenException();
+    const name=input.name?.trim();
+    if(!name||name.length<2||name.length>100||!Object.values(MedicationForm).includes(input.presentation)||
+      !Object.values(MedicationRoute).includes(input.route)||input.concentration?.length>80||input.unit?.length>50)
+      throw new BadRequestException('Completa los datos del medicamento.');
+    return this.prisma.$transaction(async tx=>{
+      await this.access.assert(patientId,'reminders',tx);
+      const existing=await tx.medication.findFirst({where:{ownerPatientId:patientId,
+        name:{equals:name,mode:'insensitive'},presentation:input.presentation,concentration:input.concentration||null,
+        route:input.route,isActive:true}});
+      if(existing)return existing;
+      const created=await tx.medication.create({data:{ownerPatientId:patientId,name,presentation:input.presentation,
+        route:input.route,concentration:input.concentration?.trim()||null,unit:input.unit?.trim()||null}});
+      await tx.auditLog.create({data:{userId:this.access.actor().id,module:'medications',action:'CREATE',
+        entityName:'Medication',entityId:created.id,description:JSON.stringify({patientId,scope:'PRIVATE'})}});
+      return created;
+    });
+  }
   async create(dto:CreatePatientTreatmentDto) {
     this.verify(dto);
     // Only owners or explicitly authorized caregivers can add personal/external treatment records.
@@ -40,7 +66,7 @@ export class PatientTreatmentsService {
     await this.authorize(dto.patientId,'reminders');
     return this.prisma.$transaction(async tx=>{
       const patient=await tx.patient.findUnique({where:{id:dto.patientId}});
-      const medication=await tx.medication.findFirst({where:{id:dto.medicationId,isActive:true}});
+      const medication=await tx.medication.findFirst({where:{id:dto.medicationId,isActive:true,OR:[{ownerPatientId:null},{ownerPatientId:dto.patientId}]}});
       if(!patient?.isActive||!medication)throw new BadRequestException('Paciente o medicamento inexistente o inactivo.');
       const result=await tx.patientTreatment.create({data:{
         patientId:dto.patientId, medicationId:dto.medicationId, registeredByUserId:this.access.actor().id,
@@ -92,7 +118,7 @@ export class PatientTreatmentsService {
       const patient=await tx.patient.findFirst({where:{id:input.patientId,isActive:true}});
       if(!patient)throw new BadRequestException('Paciente no disponible.');
       const ids=[...new Set(input.medications.map(m=>m.medicationId))];
-      const catalog=await tx.medication.findMany({where:{id:{in:ids},isActive:true},select:{id:true}});
+      const catalog=await tx.medication.findMany({where:{id:{in:ids},isActive:true,OR:[{ownerPatientId:null},{ownerPatientId:input.patientId}]},select:{id:true}});
       if(catalog.length!==ids.length)throw new BadRequestException('Hay medicamentos inexistentes o inactivos.');
       const consultation=await tx.externalConsultation.create({data:{
         patientId:input.patientId,registeredByUserId:actor.id,visitDate:new Date(input.visitDate),
