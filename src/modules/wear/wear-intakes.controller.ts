@@ -77,7 +77,8 @@ class WearIntakesService {
     if(dto.status!==TreatmentIntakeStatus.TAKEN && dto.status!==TreatmentIntakeStatus.SKIPPED)
       throw new BadRequestException('Estado no permitido.');
     return this.db.$transaction(async tx=>{
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(880, ${id})`;
+      // PostgreSQL advisory lock returns void; cast to text for Prisma raw result decoding.
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(880, ${id})::text AS acquired`;
       const registered=await tx.patientTreatmentIntake.findFirst({where:{patientTreatmentId:id,scheduledAt}});
       if(registered) throw new BadRequestException('Esta toma ya se registró.');
       const intake=await tx.patientTreatmentIntake.create({
