@@ -5,6 +5,7 @@ import {
   localDate,
   addDays,
   occurrenceKey,
+  localInstant,
 } from '../../../prescriptions/domain/schedule';
 import type { NotificationSchedulerRepository } from '../../domain/interfaces/notification-scheduler.repository';
 @Injectable()
@@ -58,6 +59,31 @@ export class PrismaNotificationSchedulerRepository implements NotificationSchedu
               },
             });
             const now = new Date();
+
+            const personal=await tx.patientTreatment.findMany({
+              where:{patientId:patient.id,status:'ACTIVE',startDate:{not:null},scheduledTimes:{isEmpty:false}},
+              include:{medication:true,intakes:{where:{scheduledAt:{not:null}}}},
+            });
+            for(const treatment of personal) {
+              const today=localDate(now,treatment.timeZone);
+              const start=treatment.startDate?.toISOString().slice(0,10);
+              const end=treatment.endDate?.toISOString().slice(0,10);
+              for(const day of [today,addDays(today,1)]) {
+                if(!start || day<start || (end && day>end))continue;
+                const weekday=new Date(day+'T00:00:00Z').getUTCDay();
+                if(treatment.daysOfWeek.length && !treatment.daysOfWeek.includes(weekday))continue;
+                for(const time of treatment.scheduledTimes) {
+                  const at=localInstant(day,time,treatment.timeZone);
+                  if(!at || at.getTime()<now.getTime()-60000)continue;
+                  if(treatment.intakes.some(x=>x.scheduledAt?.getTime()===at.getTime()))continue;
+                  const key='personal:'+treatment.id+':'+at.toISOString()+':'+profile.userId;
+                  await tx.notification.upsert({where:{deduplicationKey:key},update:{},
+                    create:{deduplicationKey:key,userId:profile.userId,patientId:patient.id,
+                      title:'Recordatorio de medicamento',message:treatment.medication.name+' - '+(treatment.dose||'Consultar indicaciones'),
+                      type:'RECORDATORIO_TOMA',scheduledFor:at,status:'PENDIENTE'}});
+                }
+              }
+            }
             for (const item of items) {
               const from = localDate(now, item.timeZone);
               const reminders = new Map<
