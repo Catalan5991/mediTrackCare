@@ -43,7 +43,7 @@ class WearIntakesService {
     const today=localDate(new Date(),patient.timeZone);
     const treatments=await this.db.patientTreatment.findMany({
       where:{patientId:actor.patientId,status:'ACTIVE'},
-      include:{medication:true,intakes:{where:{scheduledAt:{gte:new Date(today+'T00:00:00Z'),lte:new Date(addDays(today,2)+'T00:00:00Z')}}}},
+      include:{medication:true,intakes:true},
       take:100,
     });
     const now=new Date();
