@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query } from '
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreatePatientTreatmentDto, UpdatePatientTreatmentDto, RecordTreatmentIntakeDto } from '../../application/treatment.dto';
 import { CreateExternalConsultationDto } from '../../application/external-consultation.dto';
+import { CreateAdministrationDto, RecordAdministrationDto } from '../../application/administration.dto';
 import { CreateMedicationDto } from '../../../medications/application/dtos/create-medication.dto';
 import { PatientTreatmentsService } from '../patient-treatments.service';
 
@@ -9,6 +10,10 @@ import { PatientTreatmentsService } from '../patient-treatments.service';
 @Controller('patient-treatments')
 export class PatientTreatmentsController {
   constructor(private readonly service:PatientTreatmentsService){}
+  @Post('administrations') @ApiOperation({summary:'Registrar sesión especial con varios componentes'})
+  createAdministration(@Body() dto:CreateAdministrationDto){return this.service.createAdministration(dto);}
+  @Get('administrations') listAdministrations(@Query('patientId',ParseIntPipe) patientId:number){return this.service.listAdministrations(patientId);}
+  @Post('administrations/:id/intakes') recordAdministration(@Param('id',ParseIntPipe) id:number,@Body() dto:RecordAdministrationDto){return this.service.recordAdministration(id,dto);}
   @Get('custom-medications') @ApiOperation({summary:'Medicamentos privados del paciente autorizado'})
   customList(@Query('patientId',ParseIntPipe) patientId:number,@Query('search') search?:string){return this.service.customMedications(patientId,search);}
   @Post('custom-medications') @ApiOperation({summary:'Crear medicamento privado para el paciente'})
