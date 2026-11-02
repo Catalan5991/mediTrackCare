@@ -84,6 +84,7 @@ model Patient {
   files               File[]
   doctorAssignments   DoctorPatient[]
   personalTreatments  PatientTreatment[]
+  customMedications   Medication[] @relation("PatientCustomMedications")
 
   @@map("patients")
 }
@@ -147,10 +148,13 @@ model Medication {
   createdAt     DateTime        @default(now()) @map("created_at")
   updatedAt     DateTime        @updatedAt @map("updated_at")
 
+  ownerPatientId Int? @map("owner_patient_id")
+  ownerPatient Patient? @relation("PatientCustomMedications",fields:[ownerPatientId],references:[id])
   prescriptionItems PrescriptionItem[]
   files             File[]
   personalTreatments PatientTreatment[]
 
+  @@index([ownerPatientId])
   @@map("medications")
 }
 
