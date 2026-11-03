@@ -89,6 +89,7 @@ model Patient {
   administrationSessions AdministrationSession[]
   medicalProfile PatientMedicalProfile?
   linkInvitations PatientLinkInvitation[]
+  dailyActivities WearDailyActivity[]
 
   @@map("patients")
 }
@@ -678,4 +679,21 @@ model WearDevice {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId])
   @@map("wear_devices")
+}
+
+
+/** Total diario informado por Wear OS; no es una medición clínica. */
+model WearDailyActivity {
+  id           Int      @id @default(autoincrement())
+  patientId    Int      @map("patient_id")
+  activityDate DateTime @map("activity_date") @db.Date
+  source       String   @default("WEAR_OS") @db.VarChar(32)
+  steps        Int
+  lastSyncedAt DateTime @default(now()) @map("last_synced_at") @db.Timestamptz(6)
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([patientId, activityDate, source], map: "wear_daily_activity_unique")
+  @@index([patientId, activityDate(sort: Desc)], map: "wear_daily_activities_patient_date_idx")
+  @@map("wear_daily_activities")
 }
