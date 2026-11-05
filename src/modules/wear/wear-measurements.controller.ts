@@ -27,11 +27,18 @@ class WearMeasurementsService {
   }
   async list(token?:string) {
     const actor=await this.actor(token);
-    return this.prisma.medicalMeasurement.findMany({
-      where:{patientId:actor.patientId},
-      select:{id:true,measurementType:true,value:true,secondValue:true,unit:true,measuredAt:true},
-      orderBy:{measuredAt:'desc'},take:25,
-    });
+    // Return the latest record of EACH clinical category, not merely the most
+    // recent 25 overall (which can hide infrequently recorded categories).
+    const types = Object.values(MeasurementType);
+    const records = await Promise.all(types.map(measurementType =>
+      this.prisma.medicalMeasurement.findFirst({
+        where: { patientId: actor.patientId, measurementType },
+        select: { id: true, measurementType: true, value: true,
+          secondValue: true, unit: true, measuredAt: true },
+        orderBy: { measuredAt: 'desc' },
+      }),
+    ));
+    return records.filter((record): record is NonNullable<typeof record> => record !== null);
   }
   async create(token:string|undefined, dto:WearMeasurementDto) {
     const actor=await this.actor(token);
