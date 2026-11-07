@@ -1,6 +1,7 @@
 import { WearModule } from './modules/wear/wear.controller';
 import { WearIntakesModule } from './modules/wear/wear-intakes.controller';
 import { WearMeasurementsModule } from './modules/wear/wear-measurements.controller';
+import { WearAgendaModule } from './modules/wear/wear-agenda.controller';
 import { WearActivityModule } from './modules/wear/wear-activity.controller';
 import { PatientAccessModule } from './common/authorization/patient-access.module';
 import { Module } from '@nestjs/common';
@@ -58,6 +59,7 @@ import { PatientTreatmentsModule } from './modules/patient-treatments/patient-tr
     WearModule,
     WearIntakesModule,
     WearMeasurementsModule,
+    WearAgendaModule,
     WearActivityModule,
   ],
   controllers: [AppController],
