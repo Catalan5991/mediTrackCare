@@ -100,6 +100,27 @@ class WearAgendaService {
       });
     });
 
+    // Keep persisted clinical events even if a prescription was retired or its
+    // schedule changed. They are part of the official patient's history.
+    const clinicalKeys = new Set(allClinical.map(entry => entry.occurrenceKey));
+    for (const saved of clinicalIntakes) {
+      const item = clinical.find(entry => entry.id === saved.prescriptionItemId);
+      if (!item) continue;
+      const key = occurrenceKey(item.id, saved.scheduledAt);
+      if (clinicalKeys.has(key)) continue;
+      const status = ({
+        TOMADA: 'TAKEN', OMITIDA: 'SKIPPED', CANCELADA: 'CANCELLED',
+        RETRASADA: 'LATE', PENDIENTE: 'PENDING',
+      } as Record<string, string>)[saved.status] ?? 'UNKNOWN';
+      allClinical.push({
+        patientId: patient.id, source: 'CLINICAL', occurrenceKey: key,
+        medicationId: item.medicationId, medicationName: item.medication.name,
+        dose: item.dose, scheduledAt: saved.scheduledAt.toISOString(),
+        status, takenAt: saved.takenAt?.toISOString() ?? null,
+      });
+      clinicalKeys.add(key);
+    }
+
     const unique = new Map<string, (typeof allPersonal)[number]>();
     for (const entry of [...allClinical, ...allPersonal]) {
       const key = entry.patientId + ':' + entry.source + ':' + entry.occurrenceKey;
