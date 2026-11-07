@@ -28,20 +28,24 @@ class WearAgendaService {
     const nextDate = addDays(date, 1);
     const untilDate = addDays(date, 2);
     const now = new Date();
+    const rangeFrom = localInstant(date, "00:00", patient.timeZone);
+    const rangeUntil = localInstant(untilDate, "00:00", patient.timeZone);
+    if (!rangeFrom || !rangeUntil) throw new UnauthorizedException("Zona horaria inválida");
     const [personal, clinical, clinicalIntakes] = await Promise.all([
       this.db.patientTreatment.findMany({
-        where: { patientId: patient.id }, include: { medication: true, intakes: true },
-        take: 200, orderBy: { id: 'asc' },
+        where: { patientId: patient.id }, include: { medication: true,
+          intakes: { where: { scheduledAt: { gte: rangeFrom, lt: rangeUntil } } } },
+        orderBy: { id: 'asc' },
       }),
       this.db.prescriptionItem.findMany({
         where: { prescription: { patientId: patient.id } },
         include: { prescription: true, medication: true },
-        take: 200, orderBy: { id: 'asc' },
+        orderBy: { id: 'asc' },
       }),
       this.db.intake.findMany({
-        where: { patientId: patient.id },
+        where: { patientId: patient.id, scheduledAt: { gte: rangeFrom, lt: rangeUntil } },
         select: { prescriptionItemId: true, scheduledAt: true, takenAt: true, status: true },
-        orderBy: { id: 'desc' }, take: 500,
+        orderBy: { id: 'desc' },
       }),
     ]);
 
