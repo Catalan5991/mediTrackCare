@@ -298,7 +298,8 @@ export class PatientTreatmentsService {
     const following=[...this.slots(item,day),...this.slots(item,addDays(day,1))].find(at=>at>scheduledAt);
     if(dto.status===TreatmentIntakeStatus.TAKEN && following && following<=now)throw new BadRequestException('Esta toma venció sin confirmación al comenzar el siguiente horario. No se pueden confirmar ambas.');
     return this.prisma.$transaction(async tx=>{
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(880, ${id})`;
+      // Prisma serializa los numeros JS como INT8 en SQL crudo; la firma de dos argumentos requiere INT4.
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(880::integer, ${id}::integer)`;
       const existing=await tx.patientTreatmentIntake.findFirst({where:{patientTreatmentId:id,scheduledAt}});
       if(existing)throw new BadRequestException('Esta toma ya se registró.');
       const row=await tx.patientTreatmentIntake.create({data:{
