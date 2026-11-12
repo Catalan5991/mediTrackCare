@@ -73,9 +73,9 @@ export class PrismaExceptionFilter implements ExceptionFilter {
             'Los datos enviados no son válidos para esta operación.',
           );
         default:
-          // Otros errores conocidos son atribuibles a la operacion solicitada,
-          // pero se usa un mensaje generico para no revelar detalles internos.
-          return new BadRequestException(
+          // Un codigo Prisma no clasificado no necesariamente indica datos
+          // invalidos del usuario. Conservar 500 para diagnostico y reintentos.
+          return new InternalServerErrorException(
             'No fue posible completar la operación solicitada.',
           );
       }
@@ -128,12 +128,18 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     const status = httpException.getStatus();
     const body = httpException.getResponse();
 
-    // Un 5xx debe quedar registrado con ruta y stack trace. El stack nunca se
-    // incluye en el JSON de respuesta, evitando filtrar informacion sensible.
-    if (status >= 500) {
+    // Registrar codigos de Prisma sin valores de consultas ni datos medicos.
+    // Los errores 4xx normales de validacion no generan logs de servidor.
+    if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+      if (status >= 500) {
+        this.logger.error(
+          `Prisma ${exception.code} en ${request.method} ${request.route?.path ?? request.path} (HTTP ${status})`,
+        );
+      }
+    } else if (status >= 500) {
       this.logger.error(
-        `Error no controlado en ${request.method} ${request.url}`,
-        exception instanceof Error ? exception.stack : String(exception),
+        `Error no controlado en ${request.method} ${request.route?.path ?? request.path}`,
+        exception instanceof Error ? exception.stack : exception instanceof Object ? exception.constructor.name : typeof exception,
       );
     }
 
