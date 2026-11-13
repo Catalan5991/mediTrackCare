@@ -4,6 +4,13 @@ export interface PrescriptionItemProps {
   prescriptionId?: number;
   medicationId: number;
   dose: string;
+  retiredAt?: Date | null;
+  doseUnit?: string | null;
+  scheduledTimes?: string[];
+  daysOfWeek?: number[];
+  timeZone?: string;
+  isActive?: boolean;
+  medication?: unknown;
   frequency: string;
   duration?: string | null;
   instructions?: string | null;
@@ -20,6 +27,13 @@ export class PrescriptionItemEntity {
   public readonly prescriptionId?: number;
   public readonly medicationId: number;
   public dose: string;
+  public retiredAt?: Date | null;
+  public doseUnit?: string | null;
+  public scheduledTimes?: string[];
+  public daysOfWeek?: number[];
+  public timeZone?: string;
+  public isActive?: boolean;
+  public medication?: unknown;
   public frequency: string;
   public duration?: string | null;
   public instructions?: string | null;
@@ -28,12 +42,22 @@ export class PrescriptionItemEntity {
   public quantity?: number | null;
   public readonly createdAt?: Date;
   public readonly updatedAt?: Date;
-
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param props Valor de props requerido por la operacion.
+   */
   constructor(props: PrescriptionItemProps) {
     this.id = props.id;
     this.prescriptionId = props.prescriptionId;
     this.medicationId = props.medicationId;
     this.dose = props.dose;
+    this.retiredAt = props.retiredAt;
+    this.doseUnit = props.doseUnit;
+    this.scheduledTimes = props.scheduledTimes;
+    this.daysOfWeek = props.daysOfWeek;
+    this.timeZone = props.timeZone;
+    this.isActive = props.isActive;
+    this.medication = props.medication;
     this.frequency = props.frequency;
     this.duration = props.duration;
     this.instructions = props.instructions;

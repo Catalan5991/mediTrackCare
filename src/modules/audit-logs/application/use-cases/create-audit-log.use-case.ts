@@ -8,11 +8,19 @@ import {
 
 @Injectable()
 export class CreateAuditLogUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param repository Repositorio utilizado para persistir y consultar repository.
+   */
   constructor(
     @Inject(AUDIT_LOGS_REPOSITORY)
     private readonly repository: IAuditLogsRepository,
   ) {}
-
+  /**
+   * Crea un registro de auditoria aplicando las reglas del caso de uso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   execute(dto: CreateAuditLogDto): Promise<AuditLogEntity> {
     return this.repository.create({
       userId: dto.userId ?? null,

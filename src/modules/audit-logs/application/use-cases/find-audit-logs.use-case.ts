@@ -8,11 +8,19 @@ import {
 
 @Injectable()
 export class FindAuditLogsUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param repository Repositorio utilizado para persistir y consultar repository.
+   */
   constructor(
     @Inject(AUDIT_LOGS_REPOSITORY)
     private readonly repository: IAuditLogsRepository,
   ) {}
-
+  /**
+   * Obtiene registros de auditoria segun los criterios indicados.
+   * @param query Datos de query validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   execute(query: FindAuditLogsDto): Promise<PaginatedAuditLogs> {
     return this.repository.findAll({
       ...query,

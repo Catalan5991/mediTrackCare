@@ -3,6 +3,10 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { configureApp } from './configure-app';
 
+/**
+ * Inicializa el recurso solicitado.
+ * @returns Promesa que resuelve con el resultado de la operación.
+ */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   configureApp(app);
@@ -28,6 +32,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
+  const port = process.env.PORT || 3001;
+  await app.listen(port, '0.0.0.0');
+  
 }
 bootstrap();

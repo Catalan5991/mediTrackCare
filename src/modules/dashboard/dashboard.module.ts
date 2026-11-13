@@ -1,3 +1,5 @@
+import { PatientsModule } from '../patients/patients.module';
+import { GetCaregiverDashboardUseCase } from './application/use-cases/get-caregiver-dashboard.use-case';
 import { Module } from '@nestjs/common';
 
 import { PrismaModule } from '../prisma/prisma.module';
@@ -11,9 +13,10 @@ import { DashboardService } from './infrastructure/services/dashboard.service';
 // Modulo raiz del dashboard. Agrupa el controller HTTP, los casos de uso,
 // el servicio de calculos y el adaptador Prisma que implementa el repositorio.
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, PatientsModule],
   controllers: [DashboardController],
   providers: [
+    GetCaregiverDashboardUseCase,
     DashboardService,
     GetAdminDashboardUseCase,
     GetPatientDashboardUseCase,

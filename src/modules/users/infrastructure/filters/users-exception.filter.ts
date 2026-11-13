@@ -11,6 +11,12 @@ import { UserNotFoundException } from '../../domain/exceptions/user-not-found.ex
 @Catch(UserAlreadyExistsException, UserNotFoundException)
 // Convierte excepciones de dominio de Users en respuestas HTTP previsibles.
 export class UsersExceptionFilter implements ExceptionFilter {
+  /**
+   * Intercepta y traduce el recurso solicitado.
+   * @param exception Excepción que debe procesarse.
+   * @param host Contexto de argumentos de la excepción.
+   * @returns Resultado producido por la operación.
+   */
   catch(exception: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();

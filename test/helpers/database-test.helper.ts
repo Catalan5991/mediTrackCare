@@ -6,6 +6,11 @@ import { TestContext, TestRole } from './test-context';
 const roles: TestRole[] = ['ADMIN', 'DOCTOR', 'CAREGIVER', 'PATIENT'];
 const password = 'E2ePassword123!';
 
+/**
+ * Ejecuta la operación clean database.
+ * @param prisma Servicio que coordina las operaciones de prisma.
+ * @returns No retorna ningún valor.
+ */
 export async function cleanDatabase(prisma: PrismaService): Promise<void> {
   await prisma.$transaction([
     prisma.doctorPatient.deleteMany(),
@@ -26,6 +31,11 @@ export async function cleanDatabase(prisma: PrismaService): Promise<void> {
   ]);
 }
 
+/**
+ * Ejecuta la operación seed test users.
+ * @param prisma Servicio que coordina las operaciones de prisma.
+ * @returns Promesa que resuelve con el resultado de la operación.
+ */
 export async function seedTestUsers(
   prisma: PrismaService,
 ): Promise<TestContext> {

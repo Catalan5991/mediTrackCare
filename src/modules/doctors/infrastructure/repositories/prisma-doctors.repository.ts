@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { PatientAccessService } from '../../../../common/authorization/patient-access.service';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { Prisma } from '../../../../../generated/prisma/client';
 
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -15,13 +16,29 @@ import { DoctorPatientAssignment } from '../../domain/entities/doctor-patient.en
 
 @Injectable()
 export class PrismaDoctorsRepository implements DoctorsRepository {
-  constructor(private readonly prisma: PrismaService) {}
-
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param prisma Servicio que coordina las operaciones de prisma.
+   */
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly access: PatientAccessService,
+  ) {}
+  /**
+   * Crea un medico con los datos recibidos.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async create(data: CreateDoctorData): Promise<Doctor> {
+    this.access.admin();
     const doctor = await this.prisma.doctor.create({ data });
     return DoctorMapper.toDomain(doctor);
   }
-
+  /**
+   * Obtiene el listado de medicos que cumplen los filtros indicados.
+   * @param params Valor de params requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findAll(params: FindDoctorsParams): Promise<PaginatedDoctors> {
     const page = params.page ?? 1;
     const limit = params.limit ?? 10;
@@ -76,24 +93,33 @@ export class PrismaDoctorsRepository implements DoctorsRepository {
       lastPage: Math.ceil(total / limit),
     };
   }
-
-  async findById(id: number): Promise<Doctor | null> {
-    const doctor = await this.prisma.doctor.findUnique({ where: { id } });
-    return doctor ? DoctorMapper.toDomain(doctor) : null;
-  }
-
+  /**
+   * Obtiene by user id.
+   * @param userId Valor de user id requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findByUserId(userId: number): Promise<Doctor | null> {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
     return doctor ? DoctorMapper.toDomain(doctor) : null;
   }
-
+  /**
+   * Obtiene by professional license.
+   * @param license Valor de license requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findByProfessionalLicense(license: string): Promise<Doctor | null> {
     const doctor = await this.prisma.doctor.findUnique({
       where: { professionalLicense: license },
     });
     return doctor ? DoctorMapper.toDomain(doctor) : null;
   }
-
+  /**
+   * Obtiene duplicate for update.
+   * @param id Identificador único del recurso.
+   * @param userId Valor de user id requerido por la operacion.
+   * @param license Valor de license requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findDuplicateForUpdate(
     id: number,
     userId?: number,
@@ -111,28 +137,61 @@ export class PrismaDoctorsRepository implements DoctorsRepository {
     });
     return doctor ? DoctorMapper.toDomain(doctor) : null;
   }
-
+  /**
+   * Actualiza un medico existente.
+   * @param id Identificador único del recurso.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async update(id: number, data: UpdateDoctorData): Promise<Doctor> {
+    this.access.admin();
     const doctor = await this.prisma.doctor.update({ where: { id }, data });
     return DoctorMapper.toDomain(doctor);
   }
-
+  /**
+   * Ejecuta la operación soft delete.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async softDelete(id: number): Promise<Doctor> {
+    this.access.admin();
     const doctor = await this.prisma.doctor.update({
       where: { id },
       data: { isActive: false },
     });
     return DoctorMapper.toDomain(doctor);
   }
-
+  /**
+   * Ejecuta la operación assign patient.
+   * @param doctorId Valor de doctor id requerido por la operacion.
+   * @param patientId Valor de patient id requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async assignPatient(
     doctorId: number,
     patientId: number,
   ): Promise<DoctorPatientAssignment> {
+    this.access.admin();
+    const verified = await this.prisma.doctor.findFirst({
+      where: { id: doctorId, isActive: true, verificationStatus: 'VERIFIED' },
+    });
+    if (!verified)
+      throw new ForbiddenException('Se requiere un medico verificado.');
     const assignment = await this.prisma.doctorPatient.upsert({
       where: { doctorId_patientId: { doctorId, patientId } },
-      create: { doctorId, patientId },
-      update: { isActive: true },
+      create: {
+        doctorId,
+        patientId,
+        status: 'ACTIVE',
+        acceptedAt: new Date(),
+        requestedByUserId: this.access.actor().id,
+      },
+      update: {
+        isActive: true,
+        status: 'ACTIVE',
+        canRead: true,
+        acceptedAt: new Date(),
+      },
     });
     return new DoctorPatientAssignment(
       assignment.doctorId,
@@ -142,14 +201,20 @@ export class PrismaDoctorsRepository implements DoctorsRepository {
       assignment.updatedAt,
     );
   }
-
+  /**
+   * Elimina patient.
+   * @param doctorId Valor de doctor id requerido por la operacion.
+   * @param patientId Valor de patient id requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async removePatient(
     doctorId: number,
     patientId: number,
   ): Promise<DoctorPatientAssignment> {
+    this.access.admin();
     const assignment = await this.prisma.doctorPatient.update({
       where: { doctorId_patientId: { doctorId, patientId } },
-      data: { isActive: false },
+      data: { isActive: false, status: 'REVOKED' },
     });
     return new DoctorPatientAssignment(
       assignment.doctorId,
@@ -159,12 +224,22 @@ export class PrismaDoctorsRepository implements DoctorsRepository {
       assignment.updatedAt,
     );
   }
-
+  /**
+   * Obtiene patient assignments.
+   * @param doctorId Valor de doctor id requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findPatientAssignments(
     doctorId: number,
   ): Promise<DoctorPatientAssignment[]> {
     const assignments = await this.prisma.doctorPatient.findMany({
-      where: { doctorId, isActive: true },
+      where: {
+        doctorId,
+        isActive: true,
+        status: 'ACTIVE',
+        canRead: true,
+        patient: await this.access.patientWhere(),
+      },
       orderBy: { createdAt: 'desc' },
     });
     return assignments.map(
@@ -177,5 +252,15 @@ export class PrismaDoctorsRepository implements DoctorsRepository {
           assignment.updatedAt,
         ),
     );
+  }
+
+  /**
+   * Obtiene un medico por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  async findById(id: number): Promise<Doctor | null> {
+    const doctor = await this.prisma.doctor.findUnique({ where: { id } });
+    return doctor ? DoctorMapper.toDomain(doctor) : null;
   }
 }

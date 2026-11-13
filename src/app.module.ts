@@ -1,3 +1,9 @@
+import { WearModule } from './modules/wear/wear.controller';
+import { WearIntakesModule } from './modules/wear/wear-intakes.controller';
+import { WearMeasurementsModule } from './modules/wear/wear-measurements.controller';
+import { WearAgendaModule } from './modules/wear/wear-agenda.controller';
+import { WearActivityModule } from './modules/wear/wear-activity.controller';
+import { PatientAccessModule } from './common/authorization/patient-access.module';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
@@ -23,6 +29,8 @@ import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { FilesModule } from './modules/files/files.module';
 import { DoctorsModule } from './modules/doctors/doctors.module';
+import { SelfProfileModule } from './modules/self-profile/self-profile.module';
+import { PatientTreatmentsModule } from './modules/patient-treatments/patient-treatments.module';
 
 @Module({
   imports: [
@@ -30,6 +38,7 @@ import { DoctorsModule } from './modules/doctors/doctors.module';
       isGlobal: true,
     }),
     PrismaModule,
+    PatientAccessModule,
     AuthModule,
     RolesModule,
     UsersModule,
@@ -45,6 +54,13 @@ import { DoctorsModule } from './modules/doctors/doctors.module';
     AuditLogsModule,
     DashboardModule,
     FilesModule,
+    PatientTreatmentsModule,
+    SelfProfileModule,
+    WearModule,
+    WearIntakesModule,
+    WearMeasurementsModule,
+    WearAgendaModule,
+    WearActivityModule,
   ],
   controllers: [AppController],
   providers: [

@@ -29,7 +29,10 @@ export class PrescriptionEntity {
   public items: PrescriptionItemEntity[];
   public readonly createdAt?: Date;
   public readonly updatedAt?: Date;
-
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param props Valor de props requerido por la operacion.
+   */
   constructor(props: PrescriptionProps) {
     this.id = props.id;
     this.patientId = props.patientId;
@@ -45,16 +48,28 @@ export class PrescriptionEntity {
   }
 
   // Marca la receta como cancelada.
+  /**
+   * Ejecuta la operación cancel.
+   * @returns No retorna ningún valor.
+   */
   cancel(): void {
     this.status = PrescriptionStatus.CANCELADO;
   }
 
   // Marca la receta como finalizada.
+  /**
+   * Ejecuta la operación complete.
+   * @returns No retorna ningún valor.
+   */
   complete(): void {
     this.status = PrescriptionStatus.FINALIZADO;
   }
 
   // Marca la receta como pausada por vencimiento o interrupcion del tratamiento.
+  /**
+   * Ejecuta la operación expire.
+   * @returns No retorna ningún valor.
+   */
   expire(): void {
     this.status = PrescriptionStatus.PAUSADO;
   }

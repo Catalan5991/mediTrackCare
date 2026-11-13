@@ -14,13 +14,24 @@ import { InvalidDoctorUserException } from '../../domain/exceptions/invalid-doct
 
 @Injectable()
 export class CreateDoctorUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param repository Repositorio utilizado para persistir y consultar repository.
+   * @param usersRepository Repositorio utilizado para persistir y consultar users repository.
+   */
   constructor(
     @Inject(DOCTORS_REPOSITORY)
     private readonly repository: DoctorsRepository,
     @Inject(USERS_REPOSITORY)
     private readonly usersRepository: UsersRepository,
   ) {}
-
+  /**
+   * Crea un medico aplicando las reglas del caso de uso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   * @throws {InvalidDoctorUserException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   * @throws {DoctorAlreadyExistsException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   async execute(dto: CreateDoctorDto) {
     const user = await this.usersRepository.findById(dto.userId);
     if (!user) {

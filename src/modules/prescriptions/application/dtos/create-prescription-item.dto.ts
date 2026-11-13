@@ -1,6 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsDateString,
+  IsArray,
+  ArrayMaxSize,
+  ArrayUnique,
+  IsTimeZone,
+  Matches,
+  Max,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -11,6 +17,36 @@ import {
 
 // Valida cada medicamento incluido dentro de una receta.
 export class CreatePrescriptionItemDto {
+  @ApiPropertyOptional({
+    example: ['08:00', '20:00'],
+    description:
+      'Horarios clinicos locales; solo un profesional autorizado puede cambiarlos.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(24)
+  @ArrayUnique()
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { each: true })
+  scheduledTimes?: string[];
+  @ApiPropertyOptional({
+    example: [1, 2, 3, 4, 5],
+    description: '0=domingo; lista vacia significa todos los dias.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @IsInt({ each: true })
+  @Min(0, { each: true })
+  @Max(6, { each: true })
+  daysOfWeek?: number[];
+  @ApiPropertyOptional({ example: 'America/Mexico_City' })
+  @IsOptional()
+  @IsTimeZone()
+  timeZone?: string;
+  @ApiPropertyOptional({ example: 'mg' })
+  @IsOptional()
+  @IsString()
+  doseUnit?: string;
   @ApiProperty({
     example: 1,
     minimum: 1,

@@ -19,11 +19,20 @@ import { DashboardService } from '../services/dashboard.service';
 // Adaptador de persistencia del Dashboard con Prisma. Mantiene las consultas
 // agregadas fuera de controller/use-cases y selecciona solo campos necesarios.
 export class PrismaDashboardRepository implements DashboardRepository {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param prisma Servicio que coordina las operaciones de prisma.
+   * @param dashboardService Servicio que coordina las operaciones de dashboard service.
+   */
   constructor(
     private readonly prisma: PrismaService,
     private readonly dashboardService: DashboardService,
   ) {}
-
+  /**
+   * Obtiene admin metrics.
+   * @param period Valor de period requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async getAdminMetrics(
     period: DashboardPeriodRange,
   ): Promise<AdminDashboardEntity> {
@@ -299,7 +308,9 @@ export class PrismaDashboardRepository implements DashboardRepository {
         active: activePrescriptions,
         expired: expiredPrescriptions,
         averageMedicationsPerPrescription: this.dashboardService.round(
-          totalPrescriptions > 0 ? prescriptionItemsTotal / totalPrescriptions : 0,
+          totalPrescriptions > 0
+            ? prescriptionItemsTotal / totalPrescriptions
+            : 0,
         ),
         mostPrescribedMedications: mostPrescribedRows.map((item) => ({
           medicationId: item.medicationId,
@@ -372,7 +383,13 @@ export class PrismaDashboardRepository implements DashboardRepository {
       },
     );
   }
-
+  /**
+   * Obtiene patient metrics.
+   * @param userId Valor de user id requerido por la operacion.
+   * @param period Valor de period requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   * @throws {PatientProfileNotFoundException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   async getPatientMetrics(
     userId: number,
     period: DashboardPeriodRange,
@@ -773,7 +790,11 @@ export class PrismaDashboardRepository implements DashboardRepository {
       [],
     );
   }
-
+  /**
+   * Ejecuta la operación active prescription where.
+   * @param now Valor de now requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   private activePrescriptionWhere(now: Date) {
     // Regla compartida para definir tratamientos activos.
     return {
@@ -781,7 +802,11 @@ export class PrismaDashboardRepository implements DashboardRepository {
       OR: [{ endDate: null }, { endDate: { gte: now } }],
     };
   }
-
+  /**
+   * Ejecuta la operación days ago start.
+   * @param days Valor de days requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   private daysAgoStart(days: number): Date {
     // Calcula el inicio UTC inclusivo de ventanas moviles como 7 y 30 dias.
     const date = new Date();
@@ -790,7 +815,11 @@ export class PrismaDashboardRepository implements DashboardRepository {
 
     return date;
   }
-
+  /**
+   * Ejecuta la operación build patients with low adherence.
+   * @param rows Valor de rows requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   private async buildPatientsWithLowAdherence(
     rows: Array<{
       patientId: number;
@@ -858,7 +887,11 @@ export class PrismaDashboardRepository implements DashboardRepository {
       adherencePercentage: item.adherencePercentage,
     }));
   }
-
+  /**
+   * Ejecuta la operación count all.
+   * @param row Valor de row requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   private countAll(row: { _count?: true | { _all?: number } }): number {
     // Prisma tipa _count de groupBy como union amplia; este helper normaliza
     // el acceso a _all y mantiene el resto del codigo mas legible.

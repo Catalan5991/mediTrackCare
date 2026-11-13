@@ -43,6 +43,7 @@ test/results/
 .env.test.local
 .env.production.local
 .env.local
+.env.production
 
 # temp directory
 .temp

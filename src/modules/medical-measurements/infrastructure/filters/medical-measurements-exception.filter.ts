@@ -8,9 +8,13 @@ import { Response } from 'express';
 
 @Catch(HttpException)
 // Normaliza las excepciones HTTP del modulo con path y timestamp.
-export class MedicalMeasurementsExceptionFilter
-  implements ExceptionFilter
-{
+export class MedicalMeasurementsExceptionFilter implements ExceptionFilter {
+  /**
+   * Intercepta y traduce el recurso solicitado.
+   * @param exception Excepción que debe procesarse.
+   * @param host Contexto de argumentos de la excepción.
+   * @returns Resultado producido por la operación.
+   */
   catch(exception: HttpException, host: ArgumentsHost) {
     const context = host.switchToHttp();
     const response = context.getResponse<Response>();

@@ -16,6 +16,12 @@ import { UserNotFoundException } from '../../domain/exceptions/user-not-found.ex
 )
 // Traduce errores de dominio de auth a respuestas HTTP consistentes.
 export class AuthExceptionFilter implements ExceptionFilter {
+  /**
+   * Intercepta y traduce el recurso solicitado.
+   * @param exception Excepción que debe procesarse.
+   * @param host Contexto de argumentos de la excepción.
+   * @returns Resultado producido por la operación.
+   */
   catch(exception: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();

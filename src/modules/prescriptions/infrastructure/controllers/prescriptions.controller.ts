@@ -9,6 +9,10 @@ import { FindPrescriptionsQueryDto } from '../../application/dtos/find-prescript
 @ApiBearerAuth('JWT-auth')
 @Controller('api/prescriptions')
 export class PrescriptionsController {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param prescriptionsService Servicio que coordina las operaciones de prescriptions service.
+   */
   constructor(private readonly prescriptionsService: PrescriptionsService) {}
 
   @Post()

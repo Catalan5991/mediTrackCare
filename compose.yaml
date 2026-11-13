@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # Servicio 1: Base de datos PostgreSQL
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: meditrack-db
+    restart: always
+    environment:
+      POSTGRES_USER: mi_usuario
+      POSTGRES_PASSWORD: mi_password
+      POSTGRES_DB: mi_base_datos
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Servicio 2: Aplicación NestJS
+  api-nestjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: meditrack-api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+      DATABASE_URL: "postgresql://mi_usuario:mi_password@meditrack-db:5432/mi_base_datos?schema=public"
+      JWT_SECRET: mi_clave_secreta_super_segura
+    depends_on:
+      - postgres-db
+
+volumes:
+  postgres_data:

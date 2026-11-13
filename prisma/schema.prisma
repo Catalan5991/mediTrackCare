@@ -27,14 +27,21 @@ model Role {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  roleId    Int      @map("role_id")
-  name      String
-  email     String   @unique
-  password  String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  confirmedTreatmentItems  PrescriptionItem[] @relation("TreatmentConfirmedBy")
+  id                       Int                @id @default(autoincrement())
+  roleId                   Int                @map("role_id")
+  name                     String
+  email                    String             @unique
+  phone                    String?
+  wearDevices              WearDevice[]
+  devices                  Device[]
+  password                 String
+  passwordResetTokenHash   String?            @unique @map("password_reset_token_hash")
+  passwordResetExpiresAt   DateTime?          @map("password_reset_expires_at")
+  passwordResetRequestedAt DateTime?          @map("password_reset_requested_at")
+  isActive                 Boolean            @default(true)
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
 
   role Role @relation(fields: [roleId], references: [id])
 
@@ -45,24 +52,27 @@ model User {
   registeredMeasurements MedicalMeasurement[] @relation("MeasurementRegisteredBy")
   notifications          Notification[]
   auditLogs              AuditLog[]
+  registeredTreatments   PatientTreatment[] @relation("PatientTreatmentRegisteredBy")
+  recordedTreatmentIntakes PatientTreatmentIntake[] @relation("PatientTreatmentIntakeRecordedBy")
 
   @@index([roleId])
   @@map("users")
 }
 
 model Patient {
-  id                    Int      @id @default(autoincrement())
-  userId                Int      @unique @map("user_id")
-  fullName              String   @map("full_name")
-  birthDate             DateTime @map("birth_date") @db.Date
-  gender                Gender   @default(NO_ESPECIFICADO)
+  id                    Int       @id @default(autoincrement())
+  userId                Int       @unique @map("user_id")
+  fullName              String    @map("full_name")
+  birthDate             DateTime? @map("birth_date") @db.Date
+  timeZone              String    @default("America/Mexico_City") @map("time_zone")
+  gender                Gender    @default(NO_ESPECIFICADO)
   phone                 String?
   address               String?
-  emergencyContactName  String?  @map("emergency_contact_name")
-  emergencyContactPhone String?  @map("emergency_contact_phone")
-  isActive              Boolean  @default(true) @map("is_active")
-  createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
+  emergencyContactName  String?   @map("emergency_contact_name")
+  emergencyContactPhone String?   @map("emergency_contact_phone")
+  isActive              Boolean   @default(true) @map("is_active")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id])
 
@@ -74,21 +84,41 @@ model Patient {
   notifications       Notification[]
   files               File[]
   doctorAssignments   DoctorPatient[]
+  personalTreatments  PatientTreatment[]
+  customMedications   Medication[] @relation("PatientCustomMedications")
+  administrationSessions AdministrationSession[]
+  medicalProfile PatientMedicalProfile?
+  linkInvitations PatientLinkInvitation[]
+  dailyActivities WearDailyActivity[]
 
   @@map("patients")
 }
 
+model PatientMedicalProfile {
+ id Int @id @default(autoincrement())
+ patientId Int @unique @map("patient_id")
+ bloodType String? @map("blood_type")
+ allergies String? @db.Text
+ conditions String? @db.Text
+ medicalNotes String? @db.Text @map("medical_notes")
+ updatedAt DateTime @updatedAt @map("updated_at")
+ patient Patient @relation(fields:[patientId],references:[id],onDelete:Cascade)
+ @@map("patient_medical_profiles")
+}
+
 model Doctor {
-  id                  Int      @id @default(autoincrement())
-  userId              Int      @unique @map("user_id")
-  fullName            String   @map("full_name")
-  professionalLicense String?  @unique @map("professional_license")
+  verificationStatus  ProfessionalVerification @default(PENDING) @map("verification_status")
+  verifiedAt          DateTime?                @map("verified_at")
+  id                  Int                      @id @default(autoincrement())
+  userId              Int                      @unique @map("user_id")
+  fullName            String                   @map("full_name")
+  professionalLicense String?                  @unique @map("professional_license")
   specialty           String?
   phone               String?
   email               String?
-  isActive            Boolean  @default(true) @map("is_active")
-  createdAt           DateTime @default(now()) @map("created_at")
-  updatedAt           DateTime @updatedAt @map("updated_at")
+  isActive            Boolean                  @default(true) @map("is_active")
+  createdAt           DateTime                 @default(now()) @map("created_at")
+  updatedAt           DateTime                 @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id])
 
@@ -99,14 +129,21 @@ model Doctor {
 }
 
 model Caregiver {
-  id           Int      @id @default(autoincrement())
-  userId       Int      @map("user_id")
-  patientId    Int      @map("patient_id")
-  relationship String
-  isPrimary    Boolean  @default(false) @map("is_primary")
-  isActive     Boolean  @default(true) @map("is_active")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  status             LinkStatus @default(ACTIVE)
+  requestedAt        DateTime   @default(now()) @map("requested_at")
+  acceptedAt         DateTime?  @map("accepted_at")
+  requestedByUserId  Int?       @map("requested_by_user_id")
+  canRead            Boolean    @default(true) @map("can_read")
+  canTrack           Boolean    @default(true) @map("can_track")
+  canManageReminders Boolean    @default(false) @map("can_manage_reminders")
+  id                 Int        @id @default(autoincrement())
+  userId             Int        @map("user_id")
+  patientId          Int        @map("patient_id")
+  relationship       String
+  isPrimary          Boolean    @default(false) @map("is_primary")
+  isActive           Boolean    @default(true) @map("is_active")
+  createdAt          DateTime   @default(now()) @map("created_at")
+  updatedAt          DateTime   @updatedAt @map("updated_at")
 
   user    User    @relation(fields: [userId], references: [id])
   patient Patient @relation(fields: [patientId], references: [id])
@@ -128,23 +165,30 @@ model Medication {
   createdAt     DateTime        @default(now()) @map("created_at")
   updatedAt     DateTime        @updatedAt @map("updated_at")
 
+  ownerPatientId Int? @map("owner_patient_id")
+  ownerPatient Patient? @relation("PatientCustomMedications",fields:[ownerPatientId],references:[id])
   prescriptionItems PrescriptionItem[]
   files             File[]
+  personalTreatments PatientTreatment[]
+  sessionComponents AdministrationComponent[]
 
+  @@index([ownerPatientId])
   @@map("medications")
 }
 
 model Prescription {
-  id        Int                @id @default(autoincrement())
-  patientId Int                @map("patient_id")
-  doctorId  Int?               @map("doctor_id")
-  diagnosis String?
-  notes     String?
-  startDate DateTime           @map("start_date") @db.Date
-  endDate   DateTime?          @map("end_date") @db.Date
-  status    PrescriptionStatus @default(ACTIVO)
-  createdAt DateTime           @default(now()) @map("created_at")
-  updatedAt DateTime           @updatedAt @map("updated_at")
+  creationKey String?            @unique @map("creation_key")
+  requestHash String?            @map("request_hash")
+  id          Int                @id @default(autoincrement())
+  patientId   Int                @map("patient_id")
+  doctorId    Int?               @map("doctor_id")
+  diagnosis   String?
+  notes       String?
+  startDate   DateTime           @map("start_date") @db.Date
+  endDate     DateTime?          @map("end_date") @db.Date
+  status      PrescriptionStatus @default(ACTIVO)
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
 
   patient Patient @relation(fields: [patientId], references: [id])
   doctor  Doctor? @relation(fields: [doctorId], references: [id])
@@ -158,17 +202,28 @@ model Prescription {
 }
 
 model PrescriptionItem {
-  id             Int       @id @default(autoincrement())
-  prescriptionId Int       @map("prescription_id")
-  medicationId   Int       @map("medication_id")
-  dose           String
-  frequency      String
-  instructions   String?
-  startDate      DateTime  @map("start_date") @db.Date
-  endDate        DateTime? @map("end_date") @db.Date
-  isActive       Boolean   @default(true) @map("is_active")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  effectiveFrom            DateTime? @map("effective_from")
+  patientConfirmedAt       DateTime? @map("patient_confirmed_at")
+  patientConfirmedByUserId Int?      @map("patient_confirmed_by_user_id")
+  patientConfirmedBy       User?     @relation("TreatmentConfirmedBy", fields: [patientConfirmedByUserId], references: [id])
+  retiredAt                DateTime? @map("retired_at")
+  doseUnit                 String?   @map("dose_unit")
+  scheduledTimes           String[]  @default([]) @map("scheduled_times")
+  daysOfWeek               Int[]     @default([]) @map("days_of_week")
+  timeZone                 String    @default("America/Mexico_City") @map("time_zone")
+  quantity                 Int?
+  duration                 String?
+  id                       Int       @id @default(autoincrement())
+  prescriptionId           Int       @map("prescription_id")
+  medicationId             Int       @map("medication_id")
+  dose                     String
+  frequency                String
+  instructions             String?
+  startDate                DateTime  @map("start_date") @db.Date
+  endDate                  DateTime? @map("end_date") @db.Date
+  isActive                 Boolean   @default(true) @map("is_active")
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
 
   prescription Prescription @relation(fields: [prescriptionId], references: [id])
   medication   Medication   @relation(fields: [medicationId], references: [id])
@@ -182,6 +237,10 @@ model PrescriptionItem {
 }
 
 model Reminder {
+  advanceMinutes     Int      @default(0) @map("advance_minutes")
+  repeatMinutes      Int?     @map("repeat_minutes")
+  repeatCount        Int      @default(0) @map("repeat_count")
+  notifyCaregiver    Boolean  @default(false) @map("notify_caregiver")
   id                 Int      @id @default(autoincrement())
   patientId          Int      @map("patient_id")
   prescriptionItemId Int      @map("prescription_item_id")
@@ -202,17 +261,19 @@ model Reminder {
 }
 
 model Intake {
-  id                 Int          @id @default(autoincrement())
-  patientId          Int          @map("patient_id")
-  prescriptionItemId Int          @map("prescription_item_id")
-  reminderId         Int?         @map("reminder_id")
-  confirmedByUserId  Int?         @map("confirmed_by_user_id")
-  scheduledAt        DateTime     @map("scheduled_at")
-  takenAt            DateTime?    @map("taken_at")
-  status             IntakeStatus @default(PENDIENTE)
-  notes              String?
-  createdAt          DateTime     @default(now()) @map("created_at")
-  updatedAt          DateTime     @updatedAt @map("updated_at")
+  occurrenceKey        String?      @unique @map("occurrence_key")
+  prescriptionSnapshot Json?        @map("prescription_snapshot")
+  id                   Int          @id @default(autoincrement())
+  patientId            Int          @map("patient_id")
+  prescriptionItemId   Int          @map("prescription_item_id")
+  reminderId           Int?         @map("reminder_id")
+  confirmedByUserId    Int?         @map("confirmed_by_user_id")
+  scheduledAt          DateTime     @map("scheduled_at")
+  takenAt              DateTime?    @map("taken_at")
+  status               IntakeStatus @default(PENDIENTE)
+  notes                String?
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
 
   patient          Patient          @relation(fields: [patientId], references: [id])
   prescriptionItem PrescriptionItem @relation(fields: [prescriptionItemId], references: [id])
@@ -250,17 +311,20 @@ model MedicalMeasurement {
 }
 
 model Notification {
-  id        Int                @id @default(autoincrement())
-  userId    Int                @map("user_id")
-  patientId Int?               @map("patient_id")
-  intakeId  Int?               @map("intake_id")
-  title     String
-  message   String
-  type      NotificationType
-  status    NotificationStatus @default(PENDIENTE)
-  sentAt    DateTime?          @map("sent_at")
-  readAt    DateTime?          @map("read_at")
-  createdAt DateTime           @default(now()) @map("created_at")
+  deduplicationKey String?            @unique @map("deduplication_key")
+  scheduledFor     DateTime?          @map("scheduled_for")
+  cancelledAt      DateTime?          @map("cancelled_at")
+  id               Int                @id @default(autoincrement())
+  userId           Int                @map("user_id")
+  patientId        Int?               @map("patient_id")
+  intakeId         Int?               @map("intake_id")
+  title            String
+  message          String
+  type             NotificationType
+  status           NotificationStatus @default(PENDIENTE)
+  sentAt           DateTime?          @map("sent_at")
+  readAt           DateTime?          @map("read_at")
+  createdAt        DateTime           @default(now()) @map("created_at")
 
   user    User     @relation(fields: [userId], references: [id])
   patient Patient? @relation(fields: [patientId], references: [id])
@@ -309,6 +373,152 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+
+/**
+ * Registro personal o transcripcion de una receta externa.
+ * No se considera prescripcion medica emitida ni verificada en la plataforma.
+ */
+model PatientTreatment {
+  id                     Int              @id @default(autoincrement())
+  patientId              Int              @map("patient_id")
+  medicationId           Int              @map("medication_id")
+  registeredByUserId     Int              @map("registered_by_user_id")
+  origin                 TreatmentOrigin
+  status                 TreatmentStatus  @default(ACTIVE)
+  externalPrescriberName String?          @map("external_prescriber_name")
+  externalPrescriptionDate DateTime?      @map("external_prescription_date") @db.Date
+  dose                   String?
+  doseUnit               String?          @map("dose_unit")
+  frequency              String?
+  instructions           String?
+  notes                  String?
+  startDate              DateTime?        @map("start_date") @db.Date
+  endDate                DateTime?        @map("end_date") @db.Date
+  scheduledTimes         String[]         @default([]) @map("scheduled_times")
+  daysOfWeek             Int[]            @default([]) @map("days_of_week")
+  timeZone               String           @map("time_zone")
+  createdAt              DateTime         @default(now()) @map("created_at")
+  updatedAt              DateTime         @updatedAt @map("updated_at")
+
+  patient                Patient          @relation(fields: [patientId], references: [id])
+  medication             Medication       @relation(fields: [medicationId], references: [id])
+  registeredBy           User             @relation("PatientTreatmentRegisteredBy", fields: [registeredByUserId], references: [id])
+  intakes                PatientTreatmentIntake[]
+  consultationId         Int?             @map("consultation_id")
+  consultation           ExternalConsultation? @relation(fields: [consultationId], references: [id])
+
+
+  @@index([patientId, status])
+  @@index([medicationId])
+  @@index([consultationId])
+  @@index([registeredByUserId])
+  @@map("patient_treatments")
+}
+
+/** Consulta y receta externa transcrita. No equivale a una prescripción verificada. */
+model ExternalConsultation {
+  id               Int       @id @default(autoincrement())
+  patientId        Int       @map("patient_id")
+  registeredByUserId Int     @map("registered_by_user_id")
+  visitDate        DateTime  @db.Date @map("visit_date")
+  doctorName       String    @map("doctor_name")
+  specialty        String?
+  clinic           String?
+  nextVisitDate    DateTime? @db.Date @map("next_visit_date")
+  notes            String?
+  createdAt        DateTime  @default(now()) @map("created_at")
+  treatments       PatientTreatment[]
+  @@index([patientId, createdAt])
+  @@map("external_consultations")
+}
+
+enum AdministrationKind {
+  INJECTION
+  NEBULIZATION
+  INHALER
+}
+model AdministrationSession {
+  id Int @id @default(autoincrement())
+  patientId Int @map("patient_id")
+  createdByUserId Int @map("created_by_user_id")
+  kind AdministrationKind
+  label String
+  origin TreatmentOrigin @default(SELF_REPORTED)
+  instructions String?
+  notes String?
+  startDate DateTime @db.Date @map("start_date")
+  endDate DateTime? @db.Date @map("end_date")
+  scheduledTimes String[] @default([]) @map("scheduled_times")
+  daysOfWeek Int[] @default([]) @map("days_of_week")
+  timeZone String @map("time_zone")
+  isActive Boolean @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  patient Patient @relation(fields:[patientId], references:[id])
+  components AdministrationComponent[]
+  intakes AdministrationSessionIntake[]
+  @@index([patientId,isActive])
+  @@map("administration_sessions")
+}
+model AdministrationComponent {
+  id Int @id @default(autoincrement())
+  sessionId Int @map("session_id")
+  medicationId Int @map("medication_id")
+  dose String
+  doseUnit String
+  instructions String?
+  session AdministrationSession @relation(fields:[sessionId],references:[id])
+  medication Medication @relation(fields:[medicationId],references:[id])
+  @@index([sessionId])
+  @@map("administration_components")
+}
+model AdministrationSessionIntake {
+  id Int @id @default(autoincrement())
+  sessionId Int @map("session_id")
+  scheduledAt DateTime @map("scheduled_at")
+  status TreatmentIntakeStatus
+  takenAt DateTime? @map("taken_at")
+  recordedByUserId Int @map("recorded_by_user_id")
+  notes String?
+  session AdministrationSession @relation(fields:[sessionId],references:[id])
+  @@unique([sessionId,scheduledAt])
+  @@map("administration_session_intakes")
+}
+/** Tomas manuales de tratamientos personales, independientes del motor de recetas. */
+model PatientTreatmentIntake {
+  id                   Int                   @id @default(autoincrement())
+  patientTreatmentId   Int                   @map("patient_treatment_id")
+  recordedByUserId     Int                   @map("recorded_by_user_id")
+  status               TreatmentIntakeStatus
+  scheduledAt          DateTime?             @map("scheduled_at")
+  takenAt              DateTime?             @map("taken_at")
+  notes                String?
+  createdAt            DateTime              @default(now()) @map("created_at")
+
+  treatment            PatientTreatment      @relation(fields: [patientTreatmentId], references: [id])
+  recordedBy           User                  @relation("PatientTreatmentIntakeRecordedBy", fields: [recordedByUserId], references: [id])
+
+  @@index([patientTreatmentId, createdAt])
+  @@index([recordedByUserId])
+  @@map("patient_treatment_intakes")
+}
+
+enum TreatmentOrigin {
+  SELF_REPORTED
+  EXTERNAL_PRESCRIPTION
+}
+
+enum TreatmentStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum TreatmentIntakeStatus {
+  TAKEN
+  SKIPPED
+}
+
 // Enums
 enum Gender {
   FEMENINO
@@ -329,6 +539,7 @@ enum IntakeStatus {
   TOMADA
   OMITIDA
   RETRASADA
+  CANCELADA
 }
 
 enum MeasurementType {
@@ -384,11 +595,18 @@ enum MedicationRoute {
 }
 
 model DoctorPatient {
-  doctorId  Int      @map("doctor_id")
-  patientId Int      @map("patient_id")
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  status             LinkStatus @default(ACTIVE)
+  requestedAt        DateTime   @default(now()) @map("requested_at")
+  acceptedAt         DateTime?  @map("accepted_at")
+  requestedByUserId  Int?       @map("requested_by_user_id")
+  canRead            Boolean    @default(true) @map("can_read")
+  canTrack           Boolean    @default(false) @map("can_track")
+  canManageReminders Boolean    @default(false) @map("can_manage_reminders")
+  doctorId           Int        @map("doctor_id")
+  patientId          Int        @map("patient_id")
+  isActive           Boolean    @default(true) @map("is_active")
+  createdAt          DateTime   @default(now()) @map("created_at")
+  updatedAt          DateTime   @updatedAt @map("updated_at")
 
   doctor  Doctor  @relation(fields: [doctorId], references: [id])
   patient Patient @relation(fields: [patientId], references: [id])
@@ -396,4 +614,86 @@ model DoctorPatient {
   @@id([doctorId, patientId])
   @@index([patientId])
   @@map("doctor_patients")
+}
+
+enum ProfessionalVerification {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum LinkStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  REVOKED
+}
+
+model Device {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  token     String   @unique
+  platform  String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("devices")
+}
+
+model PatientLinkInvitation {
+ id Int @id @default(autoincrement())
+ patientId Int @map("patient_id")
+ kind String
+ tokenHash String @unique @map("token_hash")
+ expiresAt DateTime @map("expires_at")
+ claimedAt DateTime? @map("claimed_at")
+ claimedByUserId Int? @map("claimed_by_user_id")
+ createdAt DateTime @default(now()) @map("created_at")
+ patient Patient @relation(fields:[patientId],references:[id],onDelete:Cascade)
+ @@index([patientId,createdAt])
+ @@map("patient_link_invitations")
+}
+
+model WearPairing {
+  id String @id @default(uuid())
+  codeHash String @unique @map("code_hash")
+  secretHash String @map("secret_hash")
+  expiresAt DateTime @map("expires_at")
+  approvedById Int? @map("approved_by_id")
+  consumedAt DateTime? @map("consumed_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  @@index([expiresAt])
+  @@map("wear_pairings")
+}
+
+model WearDevice {
+  id String @id @default(uuid())
+  userId Int @map("user_id")
+  tokenHash String @unique @map("token_hash")
+  name String @default("Galaxy Watch")
+  createdAt DateTime @default(now()) @map("created_at")
+  revokedAt DateTime? @map("revoked_at")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@map("wear_devices")
+}
+
+
+/** Total diario informado por Wear OS; no es una medición clínica. */
+model WearDailyActivity {
+  id           Int      @id @default(autoincrement())
+  patientId    Int      @map("patient_id")
+  activityDate DateTime @map("activity_date") @db.Date
+  source       String   @default("WEAR_OS") @db.VarChar(32)
+  steps        Int
+  lastSyncedAt DateTime @default(now()) @map("last_synced_at") @db.Timestamptz(6)
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([patientId, activityDate, source], map: "wear_daily_activity_unique")
+  @@index([patientId, activityDate(sort: Desc)], map: "wear_daily_activities_patient_date_idx")
+  @@map("wear_daily_activities")
 }

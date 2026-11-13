@@ -15,6 +15,15 @@ import { DeletePrescriptionUseCase } from '../../application/use-cases/delete-pr
  */
 @Injectable()
 export class PrescriptionsService {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param createPrescriptionUseCase Caso de uso encargado de create prescription use case.
+   * @param findAllPrescriptionsUseCase Caso de uso encargado de find all prescriptions use case.
+   * @param findPrescriptionByIdUseCase Caso de uso encargado de find prescription by id use case.
+   * @param updatePrescriptionUseCase Caso de uso encargado de update prescription use case.
+   * @param cancelPrescriptionUseCase Caso de uso encargado de cancel prescription use case.
+   * @param deletePrescriptionUseCase Caso de uso encargado de delete prescription use case.
+   */
   constructor(
     private readonly createPrescriptionUseCase: CreatePrescriptionUseCase,
     private readonly findAllPrescriptionsUseCase: FindAllPrescriptionsUseCase,
@@ -23,11 +32,10 @@ export class PrescriptionsService {
     private readonly cancelPrescriptionUseCase: CancelPrescriptionUseCase,
     private readonly deletePrescriptionUseCase: DeletePrescriptionUseCase,
   ) {}
-
   /**
-   * Registra una nueva prescripción médica convirtiendo las fechas a formato Date.
-   * @param {CreatePrescriptionDto} dto - Datos de la receta médica e ítems de medicamentos.
-   * @returns {Promise<any>} Objeto de la receta médica persistida con sus relaciones.
+   * Crea un prescripcion con los datos recibidos.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Resultado producido por la operación.
    */
   create(dto: CreatePrescriptionDto) {
     return this.createPrescriptionUseCase.execute({
@@ -43,30 +51,27 @@ export class PrescriptionsService {
       })),
     });
   }
-
   /**
-   * Recupera todas las recetas médicas aplicando los filtros de consulta.
-   * @param {FindPrescriptionsQueryDto} query - Parámetros de búsqueda, filtros y paginación.
-   * @returns {Promise<any>} Lista y metadata de las recetas médicas registradas.
+   * Obtiene el listado de prescripcions que cumplen los filtros indicados.
+   * @param query Datos de query validados para la operacion.
+   * @returns Resultado producido por la operación.
    */
   findAll(query: FindPrescriptionsQueryDto) {
     return this.findAllPrescriptionsUseCase.execute(query);
   }
-
   /**
-   * Obtiene la información detallada de una receta médica por su identificador único.
-   * @param {number} id - Identificador numérico de la prescripción.
-   * @returns {Promise<any>} Objeto detallado de la receta médica solicitada.
+   * Obtiene un prescripcion por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
    */
   findById(id: number) {
     return this.findPrescriptionByIdUseCase.execute(id);
   }
-
   /**
-   * Actualiza los datos o instrucciones de una prescripción médica existente.
-   * @param {number} id - Identificador numérico de la receta a modificar.
-   * @param {UpdatePrescriptionDto} dto - Datos modificados de la receta.
-   * @returns {Promise<any>} Objeto de la receta médica con los cambios aplicados.
+   * Actualiza un prescripcion existente.
+   * @param id Identificador único del recurso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Resultado producido por la operación.
    */
   update(id: number, dto: UpdatePrescriptionDto) {
     return this.updatePrescriptionUseCase.execute(id, {
@@ -82,20 +87,18 @@ export class PrescriptionsService {
       })),
     });
   }
-
   /**
-   * Cancela una prescripción médica activa dentro del sistema.
-   * @param {number} id - Identificador numérico de la receta a cancelar.
-   * @returns {Promise<any>} Confirmación de la cancelación de la receta.
+   * Ejecuta la operación cancel.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
    */
   cancel(id: number) {
     return this.cancelPrescriptionUseCase.execute(id);
   }
-
   /**
-   * Elimina un registro de prescripción médica de la base de datos.
-   * @param {number} id - Identificador numérico de la receta a eliminar.
-   * @returns {Promise<any>} Resultado de la operación de eliminación.
+   * Elimina un prescripcion por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
    */
   delete(id: number) {
     return this.deletePrescriptionUseCase.execute(id);

@@ -13,8 +13,16 @@ import { RoleMapper } from '../mappers/role.mapper';
 
 @Injectable()
 export class PrismaRolesRepository implements RolesRepository {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param prisma Servicio que coordina las operaciones de prisma.
+   */
   constructor(private readonly prisma: PrismaService) {}
-
+  /**
+   * Crea un rol con los datos recibidos.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async create(data: CreateRoleData): Promise<Role> {
     // Persiste el rol con los campos definidos en Prisma y devuelve una entidad
     // de dominio para mantener aislado al resto del modulo.
@@ -27,7 +35,11 @@ export class PrismaRolesRepository implements RolesRepository {
 
     return RoleMapper.toDomain(role);
   }
-
+  /**
+   * Obtiene el listado de rols que cumplen los filtros indicados.
+   * @param params Valor de params requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findAll(params: FindRolesParams): Promise<PaginatedRoles> {
     // Centraliza los valores por defecto de paginacion para que el contrato de
     // listado sea estable sin importar que parametros envie el cliente.
@@ -81,18 +93,11 @@ export class PrismaRolesRepository implements RolesRepository {
       lastPage: Math.ceil(total / limit),
     };
   }
-
-  async findById(id: number): Promise<Role | null> {
-    // Consulta por llave primaria para detalle, actualizacion y borrado logico.
-    const role = await this.prisma.role.findUnique({
-      where: { id },
-    });
-
-    if (!role) return null;
-
-    return RoleMapper.toDomain(role);
-  }
-
+  /**
+   * Obtiene by name.
+   * @param name Valor de name requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findByName(name: string): Promise<Role | null> {
     // Usa el indice unico name definido en schema.prisma para detectar choques.
     const role = await this.prisma.role.findUnique({
@@ -103,7 +108,12 @@ export class PrismaRolesRepository implements RolesRepository {
 
     return RoleMapper.toDomain(role);
   }
-
+  /**
+   * Obtiene by name except id.
+   * @param name Valor de name requerido por la operacion.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findByNameExceptId(name: string, id: number): Promise<Role | null> {
     // Busca otro registro con el mismo nombre durante actualizaciones. Excluir
     // el id actual permite conservar el nombre sin disparar falso duplicado.
@@ -120,7 +130,12 @@ export class PrismaRolesRepository implements RolesRepository {
 
     return RoleMapper.toDomain(role);
   }
-
+  /**
+   * Actualiza un rol existente.
+   * @param id Identificador único del recurso.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async update(id: number, data: UpdateRoleData): Promise<Role> {
     // Prisma ignora undefined, por eso el mismo objeto funciona para PATCH sin
     // armar manualmente solo los campos enviados.
@@ -135,7 +150,11 @@ export class PrismaRolesRepository implements RolesRepository {
 
     return RoleMapper.toDomain(role);
   }
-
+  /**
+   * Ejecuta la operación soft delete.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async softDelete(id: number): Promise<Role> {
     // Borrado logico: desactiva el rol para preservar historial y relaciones
     // existentes con usuarios.
@@ -145,6 +164,22 @@ export class PrismaRolesRepository implements RolesRepository {
         isActive: false,
       },
     });
+
+    return RoleMapper.toDomain(role);
+  }
+
+  /**
+   * Obtiene un rol por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  async findById(id: number): Promise<Role | null> {
+    // Consulta por llave primaria para detalle, actualizacion y borrado logico.
+    const role = await this.prisma.role.findUnique({
+      where: { id },
+    });
+
+    if (!role) return null;
 
     return RoleMapper.toDomain(role);
   }

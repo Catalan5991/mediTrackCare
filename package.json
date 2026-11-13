@@ -11,7 +11,10 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/src/main",
+    "start:deploy": "prisma migrate deploy && prisma db seed && node dist/src/main",
+    "db:seed": "prisma db seed",
+    "db:seed:verify": "tsx scripts/verify-seed.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -24,7 +27,8 @@
     "test:e2e:full": "npm run test:e2e:cov && npm run test:e2e:json && npm run test:e2e:summary",
     "test:e2e:summary": "tsx test/scripts/jest-json-to-markdown.ts",
     "test:db:migrate": "tsx test/scripts/prisma-test.ts migrate deploy",
-    "test:db:reset": "tsx test/scripts/prisma-test.ts migrate reset --force --skip-seed"
+    "test:db:reset": "tsx test/scripts/prisma-test.ts migrate reset --force --skip-seed",
+    "start:worker": "node dist/src/medication-worker.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

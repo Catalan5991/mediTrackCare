@@ -23,37 +23,11 @@ export class PrismaExceptionFilter implements ExceptionFilter {
   // Logger de Nest utilizado solamente para errores no controlados. Los errores
   // esperados del cliente (400, 404 o 409) no se registran como fallos internos.
   private readonly logger = new Logger(PrismaExceptionFilter.name);
-
-  catch(exception: unknown, host: ArgumentsHost): void {
-    // Cambia del contexto generico de Nest al contexto HTTP para obtener la
-    // solicitud original y construir manualmente la respuesta normalizada.
-    const context = host.switchToHttp();
-    const request = context.getRequest<Request>();
-    const response = context.getResponse<Response>();
-    const httpException = this.toHttpException(exception);
-    const status = httpException.getStatus();
-    const body = httpException.getResponse();
-
-    // Un 5xx debe quedar registrado con ruta y stack trace. El stack nunca se
-    // incluye en el JSON de respuesta, evitando filtrar informacion sensible.
-    if (status >= 500) {
-      this.logger.error(
-        `Error no controlado en ${request.method} ${request.url}`,
-        exception instanceof Error ? exception.stack : String(exception),
-      );
-    }
-
-    // Todos los errores globales comparten esta estructura. Los filtros
-    // especificos de cada modulo pueden seguir manejando excepciones de dominio.
-    response.status(status).json({
-      statusCode: status,
-      error: this.readField(body, 'error') ?? httpException.name,
-      message: this.readField(body, 'message') ?? String(body),
-      timestamp: new Date().toISOString(),
-      path: request.url,
-    });
-  }
-
+  /**
+   * Ejecuta la operación to http exception.
+   * @param exception Excepción que debe procesarse.
+   * @returns Resultado producido por la operación.
+   */
   private toHttpException(exception: unknown): HttpException {
     // Respeta excepciones HTTP creadas de forma intencional por guards, pipes,
     // controladores o casos de uso: BadRequest, Unauthorized, Forbidden, etc.
@@ -64,6 +38,15 @@ export class PrismaExceptionFilter implements ExceptionFilter {
       // metadata de base de datos. Esto tambien cubre condiciones de carrera,
       // por ejemplo cuando un registro desaparece despues de validar existencia.
       switch (exception.code) {
+        case 'P2034':
+          return new ConflictException(
+            'El recurso cambio durante la operacion; vuelve a consultar e intenta de nuevo.',
+          );
+        case 'P2021':
+        case 'P2022':
+          return new InternalServerErrorException(
+            'El esquema de base de datos requiere actualizar sus migraciones.',
+          );
         case 'P2002':
           // Restriccion unique: el recurso solicitado duplicaria datos unicos.
           return new ConflictException(
@@ -90,9 +73,9 @@ export class PrismaExceptionFilter implements ExceptionFilter {
             'Los datos enviados no son válidos para esta operación.',
           );
         default:
-          // Otros errores conocidos son atribuibles a la operacion solicitada,
-          // pero se usa un mensaje generico para no revelar detalles internos.
-          return new BadRequestException(
+          // Un codigo Prisma no clasificado no necesariamente indica datos
+          // invalidos del usuario. Conservar 500 para diagnostico y reintentos.
+          return new InternalServerErrorException(
             'No fue posible completar la operación solicitada.',
           );
       }
@@ -112,7 +95,12 @@ export class PrismaExceptionFilter implements ExceptionFilter {
       'Ocurrió un error interno inesperado.',
     );
   }
-
+  /**
+   * Ejecuta la operación read field.
+   * @param body Valor de body requerido por la operacion.
+   * @param field Valor de field requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   private readField(
     body: string | object,
     field: 'error' | 'message',
@@ -122,5 +110,47 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     return typeof body === 'object' && body !== null && field in body
       ? (body as Record<string, unknown>)[field]
       : undefined;
+  }
+
+  /**
+   * Intercepta y traduce el recurso solicitado.
+   * @param exception Excepción que debe procesarse.
+   * @param host Contexto de argumentos de la excepción.
+   * @returns No retorna ningún valor.
+   */
+  catch(exception: unknown, host: ArgumentsHost): void {
+    // Cambia del contexto generico de Nest al contexto HTTP para obtener la
+    // solicitud original y construir manualmente la respuesta normalizada.
+    const context = host.switchToHttp();
+    const request = context.getRequest<Request>();
+    const response = context.getResponse<Response>();
+    const httpException = this.toHttpException(exception);
+    const status = httpException.getStatus();
+    const body = httpException.getResponse();
+
+    // Registrar codigos de Prisma sin valores de consultas ni datos medicos.
+    // Los errores 4xx normales de validacion no generan logs de servidor.
+    if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+      if (status >= 500) {
+        this.logger.error(
+          `Prisma ${exception.code} en ${request.method} ${request.route?.path ?? request.path} (HTTP ${status})`,
+        );
+      }
+    } else if (status >= 500) {
+      this.logger.error(
+        `Error no controlado en ${request.method} ${request.route?.path ?? request.path}`,
+        exception instanceof Error ? exception.stack : exception instanceof Object ? exception.constructor.name : typeof exception,
+      );
+    }
+
+    // Todos los errores globales comparten esta estructura. Los filtros
+    // especificos de cada modulo pueden seguir manejando excepciones de dominio.
+    response.status(status).json({
+      statusCode: status,
+      error: this.readField(body, 'error') ?? httpException.name,
+      message: this.readField(body, 'message') ?? String(body),
+      timestamp: new Date().toISOString(),
+      path: request.url,
+    });
   }
 }

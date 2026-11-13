@@ -1,3 +1,4 @@
+import { PatientAccessService } from '../../../../common/authorization/patient-access.service';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '../../../../../generated/prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
@@ -13,9 +14,21 @@ import { CaregiverMapper } from '../mappers/caregiver.mapper';
 
 @Injectable()
 export class PrismaCaregiversRepository implements CaregiversRepository {
-  constructor(private readonly prisma: PrismaService) {}
-
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param prisma Servicio que coordina las operaciones de prisma.
+   */
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly access: PatientAccessService,
+  ) {}
+  /**
+   * Crea un cuidador con los datos recibidos.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async create(data: CreateCaregiverData): Promise<Caregiver> {
+    this.access.admin();
     // Persiste el vinculo usando los nombres del modelo Prisma. La conversion
     // a entidad de dominio se hace al final para no filtrar tipos del ORM.
     const caregiver = await this.prisma.caregiver.create({
@@ -29,7 +42,11 @@ export class PrismaCaregiversRepository implements CaregiversRepository {
 
     return CaregiverMapper.toDomain(caregiver);
   }
-
+  /**
+   * Obtiene el listado de cuidadors que cumplen los filtros indicados.
+   * @param params Valor de params requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findAll(params: FindCaregiversParams): Promise<PaginatedCaregivers> {
     // Normaliza paginacion aqui para que todos los consumidores del repositorio
     // obtengan el mismo comportamiento, aunque omitan page o limit.
@@ -40,6 +57,7 @@ export class PrismaCaregiversRepository implements CaregiversRepository {
     // Construye un where dinamico: solo se agregan filtros cuando el parametro
     // fue enviado. Esto permite combinar busqueda, estado, paciente y usuario.
     const where: Prisma.CaregiverWhereInput = {
+      patient: await this.access.patientWhere(),
       ...(params.userId !== undefined && {
         userId: params.userId,
       }),
@@ -84,18 +102,12 @@ export class PrismaCaregiversRepository implements CaregiversRepository {
       lastPage: Math.ceil(total / limit),
     };
   }
-
-  async findById(id: number): Promise<Caregiver | null> {
-    // findUnique aprovecha la llave primaria id definida en el modelo Caregiver.
-    const caregiver = await this.prisma.caregiver.findUnique({
-      where: { id },
-    });
-
-    if (!caregiver) return null;
-
-    return CaregiverMapper.toDomain(caregiver);
-  }
-
+  /**
+   * Obtiene by user and patient.
+   * @param userId Valor de user id requerido por la operacion.
+   * @param patientId Valor de patient id requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findByUserAndPatient(
     userId: number,
     patientId: number,
@@ -115,8 +127,14 @@ export class PrismaCaregiversRepository implements CaregiversRepository {
 
     return CaregiverMapper.toDomain(caregiver);
   }
-
+  /**
+   * Actualiza un cuidador existente.
+   * @param id Identificador único del recurso.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async update(id: number, data: UpdateCaregiverData): Promise<Caregiver> {
+    this.access.admin();
     // Prisma ignora valores undefined, por eso este metodo sirve para PATCH
     // sin tener que construir manualmente un objeto solo con campos presentes.
     const caregiver = await this.prisma.caregiver.update({
@@ -127,21 +145,51 @@ export class PrismaCaregiversRepository implements CaregiversRepository {
         relationship: data.relationship,
         isPrimary: data.isPrimary,
         isActive: data.isActive,
+        status:
+          data.isActive === undefined
+            ? undefined
+            : data.isActive
+              ? 'ACTIVE'
+              : 'REVOKED',
+        acceptedAt: data.isActive ? new Date() : undefined,
       },
     });
 
     return CaregiverMapper.toDomain(caregiver);
   }
-
+  /**
+   * Ejecuta la operación soft delete.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async softDelete(id: number): Promise<Caregiver> {
+    this.access.admin();
     // Borrado logico: conserva el registro y solo lo desactiva para mantener
     // trazabilidad de quien estuvo asociado al cuidado del paciente.
     const caregiver = await this.prisma.caregiver.update({
       where: { id },
       data: {
         isActive: false,
+        status: 'REVOKED',
       },
     });
+
+    return CaregiverMapper.toDomain(caregiver);
+  }
+
+  /**
+   * Obtiene un cuidador por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  async findById(id: number): Promise<Caregiver | null> {
+    await this.access.resource('caregiver', id);
+    // findUnique aprovecha la llave primaria id definida en el modelo Caregiver.
+    const caregiver = await this.prisma.caregiver.findUnique({
+      where: { id },
+    });
+
+    if (!caregiver) return null;
 
     return CaregiverMapper.toDomain(caregiver);
   }

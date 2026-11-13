@@ -31,15 +31,16 @@ import { Permission } from '../../../../common/enums/permission.enum';
 @Controller('audit-logs')
 @Permissions(Permission.VIEW_AUDIT_LOGS)
 export class AuditLogsController {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param service Servicio que coordina las operaciones de service.
+   */
   constructor(private readonly service: AuditLogsService) {}
-
-  @Post()
-  @ApiOperation({ summary: 'Registrar un evento de auditoría.' })
-  @ApiCreatedResponse({ type: AuditLogResponseDto })
-  async create(@Body() dto: CreateAuditLogDto): Promise<AuditLogResponseDto> {
-    return AuditLogMapper.toResponse(await this.service.create(dto));
-  }
-
+  /**
+   * Obtiene el listado de registro de auditorias que cumplen los filtros indicados.
+   * @param query Datos de query validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   @Get()
   @ApiOperation({
     summary: 'Consultar registros de auditoría con filtros y paginación.',
@@ -52,6 +53,11 @@ export class AuditLogsController {
     return { ...result, data: result.data.map(AuditLogMapper.toResponse) };
   }
 
+  /**
+   * Obtiene by id.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   @Get(':id')
   @ApiOperation({ summary: 'Consultar un registro de auditoría por ID.' })
   @ApiOkResponse({ type: AuditLogResponseDto })
@@ -60,5 +66,17 @@ export class AuditLogsController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<AuditLogResponseDto> {
     return AuditLogMapper.toResponse(await this.service.findById(id));
+  }
+
+  /**
+   * Crea un registro de auditoria con los datos recibidos.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  @Post()
+  @ApiOperation({ summary: 'Registrar un evento de auditoría.' })
+  @ApiCreatedResponse({ type: AuditLogResponseDto })
+  async create(@Body() dto: CreateAuditLogDto): Promise<AuditLogResponseDto> {
+    return AuditLogMapper.toResponse(await this.service.create(dto));
   }
 }
