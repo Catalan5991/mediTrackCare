@@ -41,10 +41,42 @@ export interface FileRelations {
 }
 
 export interface IFilesRepository {
+  /**
+   * Crea un archivo con los datos recibidos.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   create(data: CreateFileData): Promise<FileEntity>;
+  /**
+   * Obtiene el listado de archivos que cumplen los filtros indicados.
+   * @param filters Valor de filters requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   findAll(filters: FileFilters): Promise<PaginatedFiles>;
+  /**
+   * Obtiene un archivo por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   findById(id: number): Promise<FileEntity | null>;
+  /**
+   * Actualiza un archivo existente.
+   * @param id Identificador único del recurso.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   update(id: number, data: UpdateFileData): Promise<FileEntity>;
-  delete(id: number): Promise<void>;
+  /**
+   * Obtiene missing relation.
+   * @param relations Valor de relations requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   findMissingRelation(relations: FileRelations): Promise<string | null>;
+
+  /**
+   * Elimina un archivo por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns No retorna ningún valor.
+   */
+  delete(id: number): Promise<void>;
 }

@@ -84,5 +84,4 @@ describe('Controlador de medicamentos', () => {
     expect(service.delete).toHaveBeenCalledWith(1);
     expect(service.delete).toHaveBeenCalledTimes(1);
   });
-  
 });

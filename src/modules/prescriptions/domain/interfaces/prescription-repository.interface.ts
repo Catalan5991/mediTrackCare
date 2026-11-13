@@ -7,6 +7,10 @@ export const PRESCRIPTION_REPOSITORY = 'PRESCRIPTION_REPOSITORY';
 // Datos necesarios para crear o reemplazar un medicamento dentro de una receta.
 export interface PrescriptionItemInput {
   medicationId: number;
+  scheduledTimes?: string[];
+  daysOfWeek?: number[];
+  timeZone?: string;
+  doseUnit?: string;
   dose: string;
   frequency: string;
   duration?: string;
@@ -18,6 +22,7 @@ export interface PrescriptionItemInput {
 
 // Contrato de entrada para registrar una receta con sus medicamentos.
 export interface CreatePrescriptionInput {
+  idempotencyKey?: string;
   patientId: number;
   doctorId?: number;
   diagnosis?: string;
@@ -59,12 +64,38 @@ export interface PaginatedPrescriptions {
 
 // Puerto de persistencia del dominio; la infraestructura decide como implementarlo.
 export interface PrescriptionRepository {
+  /**
+   * Crea un prescripcion con los datos recibidos.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   create(data: CreatePrescriptionInput): Promise<PrescriptionEntity>;
+  /**
+   * Obtiene el listado de prescripcions que cumplen los filtros indicados.
+   * @param filters Valor de filters requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   findAll(filters: FindPrescriptionsFilters): Promise<PaginatedPrescriptions>;
+  /**
+   * Obtiene un prescripcion por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   findById(id: number): Promise<PrescriptionEntity | null>;
+  /**
+   * Actualiza un prescripcion existente.
+   * @param id Identificador único del recurso.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   update(
     id: number,
     data: UpdatePrescriptionInput,
   ): Promise<PrescriptionEntity>;
+  /**
+   * Elimina el recurso solicitado.
+   * @param id Identificador único del recurso.
+   * @returns No retorna ningún valor.
+   */
   delete(id: number): Promise<void>;
 }

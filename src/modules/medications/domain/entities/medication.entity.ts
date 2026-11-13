@@ -29,7 +29,10 @@ export class MedicationEntity {
   public isActive: boolean;
   public readonly createdAt?: Date;
   public readonly updatedAt?: Date;
-
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param props Valor de props requerido por la operacion.
+   */
   constructor(props: MedicationProps) {
     this.id = props.id;
     this.name = props.name;

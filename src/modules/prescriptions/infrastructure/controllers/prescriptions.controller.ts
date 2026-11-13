@@ -32,9 +32,18 @@ import { SystemRole } from '../../../../common/enums/system-role.enum';
 @Controller('prescriptions')
 @UseFilters(PrescriptionExceptionFilter)
 export class PrescriptionsController {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param prescriptionsService Servicio que coordina las operaciones de prescriptions service.
+   */
   constructor(private readonly prescriptionsService: PrescriptionsService) {}
 
   // Registra una receta con sus medicamentos asociados.
+  /**
+   * Crea un prescripcion con los datos recibidos.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Post()
   @Permissions(Permission.CREATE_PRESCRIPTIONS)
   @ApiOperation({ summary: 'Crear una receta' })
@@ -49,6 +58,11 @@ export class PrescriptionsController {
   }
 
   // Lista recetas aplicando paginacion y filtros opcionales.
+  /**
+   * Obtiene el listado de prescripcions que cumplen los filtros indicados.
+   * @param query Datos de query validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Get()
   @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({ summary: 'Listar recetas' })
@@ -65,6 +79,11 @@ export class PrescriptionsController {
   }
 
   // Consulta el detalle de una receta por su identificador.
+  /**
+   * Obtiene un prescripcion por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   @Get(':id')
   @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({ summary: 'Obtener una receta por id' })
@@ -79,6 +98,12 @@ export class PrescriptionsController {
   }
 
   // Actualiza los datos generales y, si se envian, reemplaza los medicamentos.
+  /**
+   * Actualiza un prescripcion existente.
+   * @param id Identificador único del recurso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Patch(':id')
   @Permissions(Permission.CREATE_PRESCRIPTIONS)
   @ApiOperation({ summary: 'Actualizar una receta' })
@@ -100,6 +125,11 @@ export class PrescriptionsController {
   }
 
   // Cambia el estado de la receta para marcarla como cancelada o finalizada segun la regla actual.
+  /**
+   * Ejecuta la operación cancel.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   @Patch(':id/cancel')
   @Permissions(Permission.CREATE_PRESCRIPTIONS)
   @ApiOperation({ summary: 'Cancelar una receta' })
@@ -114,6 +144,11 @@ export class PrescriptionsController {
   }
 
   // Elimina una receta existente.
+  /**
+   * Elimina un prescripcion por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   @Delete(':id')
   @Roles(SystemRole.ADMIN)
   @ApiOperation({ summary: 'Eliminar una receta' })

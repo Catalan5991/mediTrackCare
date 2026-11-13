@@ -39,17 +39,16 @@ import { SystemRole } from '../../../../common/enums/system-role.enum';
 @Controller('files')
 @UseFilters(FileExceptionFilter)
 export class FilesController {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param service Servicio que coordina las operaciones de service.
+   */
   constructor(private readonly service: FilesService) {}
-
-  @Post()
-  // Crear evidencias requiere el permiso funcional configurado para el rol.
-  @Permissions(Permission.UPLOAD_EVIDENCES)
-  @ApiOperation({ summary: 'Registrar un archivo.' })
-  @ApiCreatedResponse({ type: FileResponseDto })
-  async create(@Body() dto: CreateFileDto): Promise<FileResponseDto> {
-    return FileMapper.toResponse(await this.service.create(dto));
-  }
-
+  /**
+   * Obtiene el listado de archivos que cumplen los filtros indicados.
+   * @param query Datos de query validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   @Get()
   // La consulta usa el permiso clinico compartido por los roles que pueden ver
   // pacientes bajo su alcance; los filtros determinan el conjunto solicitado.
@@ -66,6 +65,11 @@ export class FilesController {
     };
   }
 
+  /**
+   * Obtiene by id.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   @Get(':id')
   // Mantiene la misma politica del listado para consultar un archivo concreto.
   @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
@@ -78,6 +82,12 @@ export class FilesController {
     return FileMapper.toResponse(await this.service.findById(id));
   }
 
+  /**
+   * Actualiza el recurso solicitado.
+   * @param id Identificador único del recurso.
+   * @param dto Datos necesarios para ejecutar la operación.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   @Patch(':id')
   // Modificar metadatos se considera parte de la gestion de evidencias.
   @Permissions(Permission.UPLOAD_EVIDENCES)
@@ -90,6 +100,11 @@ export class FilesController {
     return FileMapper.toResponse(await this.service.update(id, dto));
   }
 
+  /**
+   * Elimina el recurso solicitado.
+   * @param id Identificador único del recurso.
+   * @returns No retorna ningún valor.
+   */
   @Delete(':id')
   // La eliminacion queda restringida al administrador para proteger historial
   // clinico y evitar que una evidencia sea retirada por un rol operativo.
@@ -99,5 +114,19 @@ export class FilesController {
   @ApiNoContentResponse()
   async delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.service.delete(id);
+  }
+
+  /**
+   * Crea un archivo con los datos recibidos.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
+  @Post()
+  // Crear evidencias requiere el permiso funcional configurado para el rol.
+  @Permissions(Permission.UPLOAD_EVIDENCES)
+  @ApiOperation({ summary: 'Registrar un archivo.' })
+  @ApiCreatedResponse({ type: FileResponseDto })
+  async create(@Body() dto: CreateFileDto): Promise<FileResponseDto> {
+    return FileMapper.toResponse(await this.service.create(dto));
   }
 }

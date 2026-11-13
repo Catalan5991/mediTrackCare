@@ -1,3 +1,4 @@
+import { ResolveIntakeDto } from '../../application/dtos/resolve-intake.dto';
 import {
   Body,
   Controller,
@@ -40,8 +41,16 @@ import { SystemRole } from '../../../../common/enums/system-role.enum';
 @UseFilters(IntakesExceptionFilter)
 // Expone los endpoints HTTP y delega la logica de aplicacion al servicio.
 export class IntakesController {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param intakesService Servicio que coordina las operaciones de intakes service.
+   */
   constructor(private readonly intakesService: IntakesService) {}
-
+  /**
+   * Crea un toma con los datos recibidos.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Post()
   @Permissions(Permission.REGISTER_INTAKES)
   @ApiOperation({
@@ -60,7 +69,11 @@ export class IntakesController {
   create(@Body() dto: CreateIntakeDto) {
     return this.intakesService.create(dto);
   }
-
+  /**
+   * Obtiene el listado de tomas que cumplen los filtros indicados.
+   * @param filters Datos de filters validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Get()
   @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({
@@ -74,6 +87,30 @@ export class IntakesController {
   // Los filtros llegan desde query params y se transforman en el DTO.
   findAll(@Query() filters: FindIntakesDto) {
     return this.intakesService.findAll(filters);
+  }
+  /**
+   * Obtiene un toma por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
+  @Patch(':id/confirm')
+  @Permissions(Permission.REGISTER_INTAKES)
+  @ApiOperation({
+    summary: 'Confirmar administracion; una repeticion identica es idempotente',
+  })
+  confirm(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ResolveIntakeDto,
+  ) {
+    return this.intakesService.update(id, { ...dto, status: 'TOMADA' });
+  }
+  @Patch(':id/skip')
+  @Permissions(Permission.REGISTER_INTAKES)
+  @ApiOperation({
+    summary: 'Registrar omision explicita de una toma cuyo horario ya llego',
+  })
+  skip(@Param('id', ParseIntPipe) id: number, @Body() dto: ResolveIntakeDto) {
+    return this.intakesService.update(id, { ...dto, status: 'OMITIDA' });
   }
 
   @Get(':id')
@@ -92,7 +129,12 @@ export class IntakesController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.intakesService.findOne(id);
   }
-
+  /**
+   * Actualiza un toma existente.
+   * @param id Identificador único del recurso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Patch(':id')
   @Permissions(Permission.REGISTER_INTAKES)
   @ApiOperation({
@@ -109,13 +151,14 @@ export class IntakesController {
     description: 'Datos invalidos.',
   })
   // Aplica cambios parciales usando el mismo identificador de ruta.
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateIntakeDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateIntakeDto) {
     return this.intakesService.update(id, dto);
   }
-
+  /**
+   * Elimina un toma por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   @Delete(':id')
   @Roles(SystemRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)

@@ -1,3 +1,4 @@
+import { PatientsModule } from '../patients/patients.module';
 import { Module } from '@nestjs/common';
 
 import { CreateDoctorUseCase } from './application/use-cases/create-doctor.use-case';
@@ -15,7 +16,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule],
+  imports: [PrismaModule, UsersModule, PatientsModule],
   controllers: [DoctorsController],
   providers: [
     DoctorsService,

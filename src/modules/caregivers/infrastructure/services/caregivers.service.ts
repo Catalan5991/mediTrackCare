@@ -13,6 +13,14 @@ import { UpdateCaregiverUseCase } from '../../application/use-cases/update-careg
 // la orquestacion de la aplicacion permanezca en la capa application.
 @Injectable()
 export class CaregiversService {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param createCaregiverUseCase Caso de uso encargado de create caregiver use case.
+   * @param findAllCaregiversUseCase Caso de uso encargado de find all caregivers use case.
+   * @param findCaregiverByIdUseCase Caso de uso encargado de find caregiver by id use case.
+   * @param updateCaregiverUseCase Caso de uso encargado de update caregiver use case.
+   * @param deleteCaregiverUseCase Caso de uso encargado de delete caregiver use case.
+   */
   constructor(
     private readonly createCaregiverUseCase: CreateCaregiverUseCase,
     private readonly findAllCaregiversUseCase: FindAllCaregiversUseCase,
@@ -20,23 +28,44 @@ export class CaregiversService {
     private readonly updateCaregiverUseCase: UpdateCaregiverUseCase,
     private readonly deleteCaregiverUseCase: DeleteCaregiverUseCase,
   ) {}
-
+  /**
+   * Crea un cuidador con los datos recibidos.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   create(dto: CreateCaregiverDto) {
     return this.createCaregiverUseCase.execute(dto);
   }
-
+  /**
+   * Obtiene el listado de cuidadors que cumplen los filtros indicados.
+   * @param query Datos de query validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   findAll(query: QueryCaregiverDto) {
     return this.findAllCaregiversUseCase.execute(query);
   }
-
+  /**
+   * Obtiene un cuidador por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   findOne(id: number) {
     return this.findCaregiverByIdUseCase.execute(id);
   }
-
+  /**
+   * Actualiza un cuidador existente.
+   * @param id Identificador único del recurso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   update(id: number, dto: UpdateCaregiverDto) {
     return this.updateCaregiverUseCase.execute(id, dto);
   }
-
+  /**
+   * Elimina un cuidador por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   remove(id: number) {
     return this.deleteCaregiverUseCase.execute(id);
   }

@@ -34,8 +34,16 @@ import { SystemRole } from '../../../../common/enums/system-role.enum';
 @Controller('caregivers')
 @UseFilters(CaregiverExceptionFilter)
 export class CaregiversController {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param caregiversService Servicio que coordina las operaciones de caregivers service.
+   */
   constructor(private readonly caregiversService: CaregiversService) {}
-
+  /**
+   * Crea un cuidador con los datos recibidos.
+   * @param createCaregiverDto Datos de create caregiver validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Post()
   @Roles(SystemRole.ADMIN)
   @ApiOperation({ summary: 'Crear un cuidador' })
@@ -53,7 +61,11 @@ export class CaregiversController {
     // POST /caregivers registra una nueva relacion usuario-paciente.
     return this.caregiversService.create(createCaregiverDto);
   }
-
+  /**
+   * Obtiene el listado de cuidadors que cumplen los filtros indicados.
+   * @param query Datos de query validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Get()
   @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({ summary: 'Obtener listado de cuidadores' })
@@ -70,7 +82,11 @@ export class CaregiversController {
     // cuidador principal, estado activo y texto de relacion.
     return this.caregiversService.findAll(query);
   }
-
+  /**
+   * Obtiene un cuidador por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   @Get(':id')
   @Permissions(Permission.VIEW_ASSIGNED_PATIENTS)
   @ApiOperation({ summary: 'Obtener un cuidador por id' })
@@ -84,7 +100,12 @@ export class CaregiversController {
     // ParseIntPipe evita que ids no numericos lleguen al caso de uso.
     return this.caregiversService.findOne(id);
   }
-
+  /**
+   * Actualiza un cuidador existente.
+   * @param id Identificador único del recurso.
+   * @param updateCaregiverDto Datos de update caregiver validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   @Patch(':id')
   @Roles(SystemRole.ADMIN)
   @ApiOperation({ summary: 'Actualizar un cuidador' })
@@ -109,7 +130,11 @@ export class CaregiversController {
     // PATCH /caregivers/:id permite actualizar parcialmente la relacion.
     return this.caregiversService.update(id, updateCaregiverDto);
   }
-
+  /**
+   * Elimina un cuidador por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   @Delete(':id')
   @Roles(SystemRole.ADMIN)
   @ApiOperation({ summary: 'Eliminar un cuidador' })

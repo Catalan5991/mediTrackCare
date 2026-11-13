@@ -1,6 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class DoctorResponseDto {
+  @ApiProperty({ enum: ['PENDING', 'VERIFIED', 'REJECTED'] })
+  verificationStatus!: string;
+  @ApiPropertyOptional({ nullable: true }) verifiedAt!: Date | null;
   @ApiProperty() id!: number;
   @ApiProperty() userId!: number;
   @ApiProperty() fullName!: string;

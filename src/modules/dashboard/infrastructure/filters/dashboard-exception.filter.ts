@@ -13,6 +13,12 @@ import { PatientProfileNotFoundException } from '../../domain/exceptions/patient
 // filtrar detalles internos de persistencia hacia el cliente.
 @Catch(PatientProfileNotFoundException, DashboardAccessDeniedException)
 export class DashboardExceptionFilter implements ExceptionFilter {
+  /**
+   * Intercepta y traduce el recurso solicitado.
+   * @param exception Excepción que debe procesarse.
+   * @param host Contexto de argumentos de la excepción.
+   * @returns Resultado producido por la operación.
+   */
   catch(exception: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();

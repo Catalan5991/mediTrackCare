@@ -7,6 +7,10 @@ export class ReminderEntity {
     description: 'Identificador unico del recordatorio.',
   })
   id!: number;
+  @ApiProperty() advanceMinutes!: number;
+  @ApiPropertyOptional() repeatMinutes?: number | null;
+  @ApiProperty() repeatCount!: number;
+  @ApiProperty() notifyCaregiver!: boolean;
 
   @ApiProperty({
     example: 1,
@@ -49,7 +53,10 @@ export class ReminderEntity {
     description: 'Fecha de ultima actualizacion del registro.',
   })
   updatedAt!: Date;
-
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param partial Valor de partial requerido por la operacion.
+   */
   constructor(partial: Partial<ReminderEntity>) {
     Object.assign(this, partial);
   }

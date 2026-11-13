@@ -15,6 +15,16 @@ import { MarkNotificationAsSentUseCase } from '../../application/use-cases/mark-
 @Injectable()
 // Fachada que expone operaciones del modulo sin acoplar el controller a casos de uso.
 export class NotificationsService {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param createNotificationUseCase Caso de uso encargado de create notification use case.
+   * @param findAllNotificationsUseCase Caso de uso encargado de find all notifications use case.
+   * @param findNotificationByIdUseCase Caso de uso encargado de find notification by id use case.
+   * @param updateNotificationUseCase Caso de uso encargado de update notification use case.
+   * @param deleteNotificationUseCase Caso de uso encargado de delete notification use case.
+   * @param markNotificationAsReadUseCase Caso de uso encargado de mark notification as read use case.
+   * @param markNotificationAsSentUseCase Caso de uso encargado de mark notification as sent use case.
+   */
   constructor(
     private readonly createNotificationUseCase: CreateNotificationUseCase,
     private readonly findAllNotificationsUseCase: FindAllNotificationsUseCase,
@@ -24,36 +34,63 @@ export class NotificationsService {
     private readonly markNotificationAsReadUseCase: MarkNotificationAsReadUseCase,
     private readonly markNotificationAsSentUseCase: MarkNotificationAsSentUseCase,
   ) {}
-
+  /**
+   * Crea un notificacion con los datos recibidos.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   create(dto: CreateNotificationDto): Promise<NotificationEntity> {
     // Cada metodo delega una intencion de la API en su caso de uso especifico.
     return this.createNotificationUseCase.execute(dto);
   }
-
+  /**
+   * Obtiene el listado de notificacions que cumplen los filtros indicados.
+   * @param query Datos de query validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
   findAll(query: QueryNotificationsDto): Promise<PaginatedNotifications> {
     return this.findAllNotificationsUseCase.execute(query);
   }
-
+  /**
+   * Obtiene un notificacion por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   findById(id: number): Promise<NotificationEntity> {
     return this.findNotificationByIdUseCase.execute(id);
   }
-
-  update(
-    id: number,
-    dto: UpdateNotificationDto,
-  ): Promise<NotificationEntity> {
+  /**
+   * Actualiza un notificacion existente.
+   * @param id Identificador único del recurso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Resultado producido por la operación.
+   */
+  update(id: number, dto: UpdateNotificationDto): Promise<NotificationEntity> {
     return this.updateNotificationUseCase.execute(id, dto);
   }
-
-  delete(id: number): Promise<void> {
-    return this.deleteNotificationUseCase.execute(id);
-  }
-
+  /**
+   * Ejecuta la operación mark as read.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   markAsRead(id: number): Promise<NotificationEntity> {
     return this.markNotificationAsReadUseCase.execute(id);
   }
-
+  /**
+   * Ejecuta la operación mark as sent.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   markAsSent(id: number): Promise<NotificationEntity> {
     return this.markNotificationAsSentUseCase.execute(id);
+  }
+
+  /**
+   * Elimina un notificacion por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns No retorna ningún valor.
+   */
+  delete(id: number): Promise<void> {
+    return this.deleteNotificationUseCase.execute(id);
   }
 }

@@ -8,10 +8,35 @@ import {
   Matches,
   MaxLength,
   Min,
+  Max,
 } from 'class-validator';
 
 // Define y valida los datos requeridos para registrar un recordatorio.
 export class CreateReminderDto {
+  @ApiPropertyOptional({ minimum: 0, maximum: 1440 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(1440)
+  advanceMinutes?: number;
+  @ApiPropertyOptional({ minimum: 1, maximum: 1440 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(1440)
+  repeatMinutes?: number;
+  @ApiPropertyOptional({ minimum: 0, maximum: 5 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(5)
+  repeatCount?: number;
+  @ApiPropertyOptional({
+    description: 'Avisar solo a cuidadores activos con permiso de seguimiento.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  notifyCaregiver?: boolean;
   @ApiProperty({
     example: 1,
     description: 'ID del paciente al que pertenece el recordatorio.',

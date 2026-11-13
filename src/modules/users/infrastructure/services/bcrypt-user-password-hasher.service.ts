@@ -7,6 +7,11 @@ import { UserPasswordHasher } from '../../domain/interfaces/user-password-hasher
 export class BcryptUserPasswordHasherService implements UserPasswordHasher {
   private readonly saltRounds = 10;
 
+  /**
+   * Genera el hash de el recurso solicitado.
+   * @param password Contraseña en texto plano que debe procesarse de forma segura.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async hash(password: string): Promise<string> {
     return bcrypt.hash(password, this.saltRounds);
   }

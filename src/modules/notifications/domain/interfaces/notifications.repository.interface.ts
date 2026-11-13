@@ -1,4 +1,7 @@
-import { NotificationStatus, NotificationType } from '../../../../../generated/prisma/client';
+import {
+  NotificationStatus,
+  NotificationType,
+} from '../../../../../generated/prisma/client';
 import { NotificationEntity } from '../entities/notification.entity';
 
 export const NOTIFICATIONS_REPOSITORY = 'NOTIFICATIONS_REPOSITORY';
@@ -54,17 +57,50 @@ export interface PaginatedNotifications {
 
 // Contrato de persistencia para mantener los casos de uso desacoplados de Prisma.
 export interface INotificationsRepository {
+  /**
+   * Crea un notificacion con los datos recibidos.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   create(data: CreateNotificationData): Promise<NotificationEntity>;
-
+  /**
+   * Obtiene el listado de notificacions que cumplen los filtros indicados.
+   * @param filters Valor de filters requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   findAll(filters: NotificationFilters): Promise<PaginatedNotifications>;
-
+  /**
+   * Obtiene un notificacion por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   findById(id: number): Promise<NotificationEntity | null>;
-
+  /**
+   * Actualiza un notificacion existente.
+   * @param id Identificador único del recurso.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   update(id: number, data: UpdateNotificationData): Promise<NotificationEntity>;
-
-  delete(id: number): Promise<void>;
-
+  /**
+   * Ejecuta la operación mark as read.
+   * @param id Identificador único del recurso.
+   * @param readAt Valor de read at requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   markAsRead(id: number, readAt: Date): Promise<NotificationEntity>;
-
+  /**
+   * Ejecuta la operación mark as sent.
+   * @param id Identificador único del recurso.
+   * @param sentAt Valor de sent at requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   markAsSent(id: number, sentAt: Date): Promise<NotificationEntity>;
+
+  /**
+   * Elimina un notificacion por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns No retorna ningún valor.
+   */
+  delete(id: number): Promise<void>;
 }

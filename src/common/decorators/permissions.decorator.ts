@@ -10,5 +10,15 @@ export const PERMISSIONS_KEY = 'permissions';
 // Ejemplo: @Permissions(Permission.REGISTER_MEASUREMENTS)
 // A diferencia de @Roles(), este decorador no pregunta "que rol eres", sino
 // "puede tu rol realizar esta accion segun la matriz de permisos".
+/**
+ * Ejecuta la operación permissions.
+ * @param permissions Valor de permissions requerido por la operacion.
+ * @returns Resultado producido por la operación.
+ */
+/**
+ * Ejecuta la operación permissions.
+ * @param permissions Valor de permissions requerido por la operacion.
+ * @returns Resultado producido por la operación.
+ */
 export const Permissions = (...permissions: Permission[]) =>
   SetMetadata(PERMISSIONS_KEY, permissions);

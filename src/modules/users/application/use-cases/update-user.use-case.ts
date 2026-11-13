@@ -16,6 +16,11 @@ import { UserNotFoundException } from '../../domain/exceptions/user-not-found.ex
 // Aplica cambios parciales preservando reglas de correo unico y hashing de password.
 @Injectable()
 export class UpdateUserUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param usersRepository Repositorio utilizado para persistir y consultar users repository.
+   * @param passwordHasher Valor de password hasher requerido por la operacion.
+   */
   constructor(
     @Inject(USERS_REPOSITORY)
     private readonly usersRepository: UsersRepository,
@@ -23,7 +28,14 @@ export class UpdateUserUseCase {
     @Inject(USER_PASSWORD_HASHER)
     private readonly passwordHasher: UserPasswordHasher,
   ) {}
-
+  /**
+   * Actualiza un usuario aplicando las reglas del caso de uso.
+   * @param id Identificador único del recurso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   * @throws {UserNotFoundException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   * @throws {UserAlreadyExistsException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   async execute(id: number, dto: UpdateUserDto): Promise<UserResponseDto> {
     const user = await this.usersRepository.findById(id);
 

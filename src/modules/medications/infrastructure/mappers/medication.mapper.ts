@@ -3,6 +3,11 @@ import { MedicationEntity } from '../../domain/entities/medication.entity';
 
 // Convierte registros de Prisma en entidades para aislar el dominio.
 export class MedicationMapper {
+  /**
+   * Transforma el recurso solicitado.
+   * @param medication Valor de medication requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   static toDomain(medication: Medication): MedicationEntity {
     return new MedicationEntity({
       id: medication.id,

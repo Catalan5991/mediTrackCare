@@ -10,5 +10,10 @@ export type TokenPayload = {
 
 // Puerto de firma para mantener JWT fuera de la capa de aplicacion.
 export interface TokenService {
+  /**
+   * Genera el recurso solicitado.
+   * @param payload Datos incluidos en la operación.
+   * @returns Resultado producido por la operación.
+   */
   sign(payload: TokenPayload): Promise<string>;
 }

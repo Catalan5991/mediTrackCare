@@ -7,8 +7,18 @@ import { MedicationsRepository } from '../../domain/interfaces/medications-repos
 // Actualiza campos parciales solo despues de confirmar que el medicamento existe.
 @Injectable()
 export class UpdateMedicationUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param medicationsRepository Repositorio utilizado para persistir y consultar medications repository.
+   */
   constructor(private readonly medicationsRepository: MedicationsRepository) {}
-
+  /**
+   * Actualiza un medicamento aplicando las reglas del caso de uso.
+   * @param id Identificador único del recurso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   * @throws {MedicationNotFoundException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   async execute(
     id: number,
     dto: UpdateMedicationDto,

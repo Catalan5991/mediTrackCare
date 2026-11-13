@@ -15,13 +15,26 @@ import {
 
 @Injectable()
 export class UpdateDoctorUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param repository Repositorio utilizado para persistir y consultar repository.
+   * @param usersRepository Repositorio utilizado para persistir y consultar users repository.
+   */
   constructor(
     @Inject(DOCTORS_REPOSITORY)
     private readonly repository: DoctorsRepository,
     @Inject(USERS_REPOSITORY)
     private readonly usersRepository: UsersRepository,
   ) {}
-
+  /**
+   * Actualiza un medico aplicando las reglas del caso de uso.
+   * @param id Identificador único del recurso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   * @throws {DoctorNotFoundException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   * @throws {InvalidDoctorUserException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   * @throws {DoctorAlreadyExistsException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   async execute(id: number, dto: UpdateDoctorDto) {
     if (!(await this.repository.findById(id))) {
       throw new DoctorNotFoundException(id);

@@ -18,6 +18,12 @@ import { InvalidDoctorUserException } from '../../domain/exceptions/invalid-doct
   InvalidDoctorUserException,
 )
 export class DoctorExceptionFilter implements ExceptionFilter {
+  /**
+   * Intercepta y traduce el recurso solicitado.
+   * @param exception Excepción que debe procesarse.
+   * @param host Contexto de argumentos de la excepción.
+   * @returns No retorna ningún valor.
+   */
   catch(exception: Error, host: ArgumentsHost): void {
     const context = host.switchToHttp();
     const request = context.getRequest<Request>();

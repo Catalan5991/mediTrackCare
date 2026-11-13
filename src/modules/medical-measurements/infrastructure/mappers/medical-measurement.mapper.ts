@@ -3,9 +3,12 @@ import { MedicalMeasurementEntity } from '../../domain/entities/medical-measurem
 
 // Traduce modelos generados por Prisma a entidades del dominio.
 export class MedicalMeasurementMapper {
-  static fromPrisma(
-    measurement: MedicalMeasurement,
-  ): MedicalMeasurementEntity {
+  /**
+   * Ejecuta la operación from prisma.
+   * @param measurement Valor de measurement requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
+  static fromPrisma(measurement: MedicalMeasurement): MedicalMeasurementEntity {
     // Prisma.Decimal se convierte a number para mantener simple la respuesta API.
     return new MedicalMeasurementEntity({
       id: measurement.id,

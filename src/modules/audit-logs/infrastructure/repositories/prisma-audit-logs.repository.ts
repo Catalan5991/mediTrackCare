@@ -12,8 +12,16 @@ import { AuditLogMapper } from '../mappers/audit-log.mapper';
 
 @Injectable()
 export class PrismaAuditLogsRepository implements IAuditLogsRepository {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param prisma Servicio que coordina las operaciones de prisma.
+   */
   constructor(private readonly prisma: PrismaService) {}
-
+  /**
+   * Crea un registro de auditoria con los datos recibidos.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async create(data: CreateAuditLogData): Promise<AuditLogEntity> {
     return AuditLogMapper.toEntity(
       await this.prisma.auditLog.create({
@@ -21,7 +29,11 @@ export class PrismaAuditLogsRepository implements IAuditLogsRepository {
       }),
     );
   }
-
+  /**
+   * Obtiene el listado de registro de auditorias que cumplen los filtros indicados.
+   * @param filters Valor de filters requerido por la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findAll(filters: AuditLogFilters): Promise<PaginatedAuditLogs> {
     const page = Math.max(Number(filters.page ?? 1), 1);
     const limit = Math.min(Math.max(Number(filters.limit ?? 10), 1), 100);
@@ -63,6 +75,11 @@ export class PrismaAuditLogsRepository implements IAuditLogsRepository {
     };
   }
 
+  /**
+   * Obtiene by id.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   */
   async findById(id: number): Promise<AuditLogEntity | null> {
     const log = await this.prisma.auditLog.findUnique({ where: { id } });
     return log ? AuditLogMapper.toEntity(log) : null;

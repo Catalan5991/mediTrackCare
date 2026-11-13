@@ -9,11 +9,20 @@ import { PatientAlreadyExistsException } from '../../domain/exceptions/patient-a
 // Crea pacientes evitando duplicar la ficha asociada a un mismo usuario.
 @Injectable()
 export class CreatePatientUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param patientsRepository Repositorio utilizado para persistir y consultar patients repository.
+   */
   constructor(
     @Inject(PATIENTS_REPOSITORY)
     private readonly patientsRepository: PatientsRepository,
   ) {}
-
+  /**
+   * Crea un paciente aplicando las reglas del caso de uso.
+   * @param dto Datos de dto validados para la operacion.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   * @throws {PatientAlreadyExistsException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   async execute(dto: CreatePatientDto) {
     if (dto.userId) {
       // Un usuario solo puede tener un registro de paciente asociado.

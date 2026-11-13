@@ -21,6 +21,20 @@ export interface DailyUserRegistration {
 // Entidad de lectura para el dashboard administrativo. Agrupa metricas globales
 // sin incluir datos sensibles como contrasenas o informacion clinica detallada.
 export class AdminDashboardEntity {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param period Valor de period requerido por la operacion.
+   * @param users Valor de users requerido por la operacion.
+   * @param patients Valor de patients requerido por la operacion.
+   * @param prescriptions Valor de prescriptions requerido por la operacion.
+   * @param intakes Valor de intakes requerido por la operacion.
+   * @param reminders Valor de reminders requerido por la operacion.
+   * @param notifications Valor de notifications requerido por la operacion.
+   * @param medicalMeasurements Valor de medical measurements requerido por la operacion.
+   * @param files Valor de files requerido por la operacion.
+   * @param audit Valor de audit requerido por la operacion.
+   * @param charts Valor de charts requerido por la operacion.
+   */
   constructor(
     public readonly period: DashboardPeriodRange,
     public readonly users: {

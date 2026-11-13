@@ -42,11 +42,48 @@ export interface PaginatedRoles {
 // Puerto de persistencia usado por los casos de uso del modulo Roles. Expone
 // operaciones del dominio sin filtrar modelos ni tipos internos del ORM.
 export interface RolesRepository {
+  /**
+   * Crea un rol con los datos recibidos.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   create(data: CreateRoleData): Promise<Role>;
+  /**
+   * Obtiene el listado de rols que cumplen los filtros indicados.
+   * @param params Valor de params requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   findAll(params: FindRolesParams): Promise<PaginatedRoles>;
+  /**
+   * Obtiene un rol por su identificador.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   findById(id: number): Promise<Role | null>;
+  /**
+   * Obtiene by name.
+   * @param name Valor de name requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   findByName(name: string): Promise<Role | null>;
+  /**
+   * Obtiene by name except id.
+   * @param name Valor de name requerido por la operacion.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   findByNameExceptId(name: string, id: number): Promise<Role | null>;
+  /**
+   * Actualiza un rol existente.
+   * @param id Identificador único del recurso.
+   * @param data Valor de data requerido por la operacion.
+   * @returns Resultado producido por la operación.
+   */
   update(id: number, data: UpdateRoleData): Promise<Role>;
+  /**
+   * Ejecuta la operación soft delete.
+   * @param id Identificador único del recurso.
+   * @returns Resultado producido por la operación.
+   */
   softDelete(id: number): Promise<Role>;
 }

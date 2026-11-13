@@ -1,3 +1,7 @@
+import { TreatmentPreferencesController } from './infrastructure/controllers/treatment-preferences.controller';
+import { ConfigureTreatmentPreferencesUseCase } from './application/use-cases/configure-treatment-preferences.use-case';
+import { TREATMENT_PREFERENCES } from './domain/interfaces/treatment-preferences.repository';
+import { PrismaTreatmentPreferencesRepository } from './infrastructure/repositories/prisma-treatment-preferences.repository';
 import { Module } from '@nestjs/common';
 
 import { PrismaModule } from '../prisma/prisma.module';
@@ -14,8 +18,13 @@ import { RemindersService } from './infrastructure/services/reminders.service';
 
 @Module({
   imports: [PrismaModule],
-  controllers: [RemindersController],
+  controllers: [RemindersController, TreatmentPreferencesController],
   providers: [
+    ConfigureTreatmentPreferencesUseCase,
+    {
+      provide: TREATMENT_PREFERENCES,
+      useClass: PrismaTreatmentPreferencesRepository,
+    },
     RemindersService,
 
     CreateReminderUseCase,

@@ -1,3 +1,7 @@
+import { DevicesController } from './infrastructure/controllers/devices.controller';
+import { ManageDevicesUseCase } from './application/use-cases/manage-devices.use-case';
+import { DEVICES_REPOSITORY } from './domain/interfaces/devices.repository';
+import { PrismaDevicesRepository } from './infrastructure/repositories/prisma-devices.repository';
 import { Module } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsController } from './infrastructure/controllers/notifications.controller';
@@ -14,9 +18,11 @@ import { MarkNotificationAsSentUseCase } from './application/use-cases/mark-noti
 
 // Agrupa el controlador, casos de uso y repositorio necesarios para notificaciones.
 @Module({
-  controllers: [NotificationsController],
+  controllers: [NotificationsController, DevicesController],
   providers: [
     PrismaService,
+    ManageDevicesUseCase,
+    { provide: DEVICES_REPOSITORY, useClass: PrismaDevicesRepository },
     NotificationsService,
 
     CreateNotificationUseCase,

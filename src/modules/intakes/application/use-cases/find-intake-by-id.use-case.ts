@@ -9,11 +9,20 @@ import {
 @Injectable()
 // Centraliza la busqueda por ID y traduce ausencias a una excepcion de dominio.
 export class FindIntakeByIdUseCase {
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param repository Repositorio utilizado para persistir y consultar repository.
+   */
   constructor(
     @Inject(INTAKES_REPOSITORY)
     private readonly repository: IntakesRepository,
   ) {}
-
+  /**
+   * Obtiene informacion de toma segun los criterios indicados.
+   * @param id Identificador único del recurso.
+   * @returns Promesa que resuelve con el resultado de la operación.
+   * @throws {IntakeNotFoundException} Cuando los datos o el estado incumplen la regla de negocio validada.
+   */
   async execute(id: number): Promise<IntakeEntity> {
     const intake = await this.repository.findById(id);
 

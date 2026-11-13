@@ -13,6 +13,12 @@ import { CaregiverNotFoundException } from '../../domain/exceptions/caregiver-no
 // status codes ni el formato final de la respuesta.
 @Catch(CaregiverNotFoundException, CaregiverAlreadyExistsException)
 export class CaregiverExceptionFilter implements ExceptionFilter {
+  /**
+   * Intercepta y traduce el recurso solicitado.
+   * @param exception Excepción que debe procesarse.
+   * @param host Contexto de argumentos de la excepción.
+   * @returns Resultado producido por la operación.
+   */
   catch(exception: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();

@@ -32,3 +32,13 @@
 **/dist
 LICENSE
 README.md
+node_modules
+dist
+coverage
+test/results
+.git
+.github
+.env*
+!.env.production.example
+npm-debug.log*
+docs/entregable

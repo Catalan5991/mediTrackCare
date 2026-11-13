@@ -70,7 +70,10 @@ export class MedicalMeasurementEntity {
     description: 'Fecha de última actualización del registro.',
   })
   updatedAt!: Date;
-
+  /**
+   * Inicializa una nueva instancia con sus dependencias y estado inicial.
+   * @param partial Valor de partial requerido por la operacion.
+   */
   constructor(partial: Partial<MedicalMeasurementEntity>) {
     // Permite hidratar la entidad desde Prisma sin acoplarla al modelo generado.
     Object.assign(this, partial);
